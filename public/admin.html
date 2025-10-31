@@ -604,7 +604,7 @@
 
         async function loadHostelData() {
             try {
-                const res = await fetch('http://localhost:5000/api/blocks');
+                const res = await fetch('https://hostel-ikc4.onrender.com/api/blocks');
                 if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                 const data = await res.json();
                 if (data.success) {
@@ -630,7 +630,7 @@
 
         async function loadClubActivities() {
             try {
-                const res = await fetch('http://localhost:5000/api/activities');
+                const res = await fetch('https://hostel-ikc4.onrender.com/api/activities');
                 if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
                 const data = await res.json();
                 if (data.success) {
@@ -902,7 +902,7 @@
             const confirmDelete = confirm(`Are you sure you want to delete the entire block "${blockName}"?\n\nThis will delete ALL rooms and ALL students in this block. This action cannot be undone.`);
             if (!confirmDelete) return;
             try {
-                const res = await fetch(`http://localhost:5000/api/blocks/${blockId}`, { method: 'DELETE' }); const data = await res.json(); if (!res.ok) throw new Error(data.message);
+                const res = await fetch(`https://hostel-ikc4.onrender.com/api/blocks/${blockId}`, { method: 'DELETE' }); const data = await res.json(); if (!res.ok) throw new Error(data.message);
                 alert('✅ Block deleted successfully!'); await loadHostelData(); 
             } catch (error) { console.error('❌ Failed to delete block:', error); alert('❌ Failed to delete block: ' + error.message); }
         }
@@ -912,7 +912,7 @@
             if (!currentRoomData || !currentRoomData._id) { alert('Error: No room selected or room ID missing.'); return; }
             const confirmDelete = confirm(`Are you sure you want to delete Room ${currentRoomData.roomNumber}? This will also remove all students in this room!`); if (!confirmDelete) return;
             try {
-                const res = await fetch(`http://localhost:5000/api/rooms/${currentRoomData._id}`, { method: 'DELETE' }); const data = await res.json(); if (!res.ok) throw new Error(data.message);
+                const res = await fetch(`https://hostel-ikc4.onrender.com/api/rooms/${currentRoomData._id}`, { method: 'DELETE' }); const data = await res.json(); if (!res.ok) throw new Error(data.message);
                 alert('✅ Room and associated students deleted successfully!'); hideModal('room-details-modal'); await loadHostelData(); 
             } catch (error) { console.error('❌ Failed to delete room:', error); alert('❌ Failed to delete room: ' + error.message); } finally { currentRoomData = null; }
         }
@@ -924,7 +924,7 @@
              if (!studentToRemove) { console.log("Student not found, refreshing..."); await loadHostelData(); const currentBlockKey = detailView.dataset.currentHostelKey; const updatedBlock = appState.blocks.find(b => b.blockKey === currentBlockKey); const updatedRoom = updatedBlock?.rooms.find(r => r._id === currentRoomData._id); studentToRemove = updatedRoom?.students.find(s => s._id === studentId); if (!studentToRemove){ alert('Error: Student not found after refresh.'); return; } studentName = studentToRemove.name; }
             const confirmRemove = confirm(`Are you sure you want to remove ${studentName} from this room? Their record will be deleted.`); if (!confirmRemove) return;
             try {
-                const res = await fetch(`http://localhost:5000/api/students/${studentId}`, { method: 'DELETE' }); const data = await res.json(); if (!res.ok) throw new Error(data.message);
+                const res = await fetch(`https://hostel-ikc4.onrender.com/api/students/${studentId}`, { method: 'DELETE' }); const data = await res.json(); if (!res.ok) throw new Error(data.message);
                 alert('✅ Student removed successfully!'); 
                 await loadHostelData(); 
                 
@@ -958,7 +958,7 @@
             if (!confirmDelete) return;
 
             try {
-                const res = await fetch(`http://localhost:5000/api/activities/${activityId}`, { 
+                const res = await fetch(`https://hostel-ikc4.onrender.com/api/activities/${activityId}`, { 
                     method: 'DELETE' 
                 });
                 const data = await res.json();
@@ -1001,7 +1001,7 @@
                 formData.append('image', fileInput.files[0]);
             }
             try {
-                const res = await fetch('http://localhost:5000/api/activities', {
+                const res = await fetch('https://hostel-ikc4.onrender.com/api/activities', {
                     method: 'POST',
                     body: formData,
                 });

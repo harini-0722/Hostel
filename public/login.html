@@ -164,7 +164,7 @@
             msgEl.innerText = ""; 
 
             try {
-                const res = await fetch("/login", {
+                const res = await fetch("https://hostel-ikc4.onrender.com/login", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ username, password, role }),
