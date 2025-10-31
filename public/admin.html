@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hostel Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module" src="https://unpkg.com/heroicons@2.1.1/dist/solid/index.js"></script>
+    <script type="module" src="https://unpkg.com/heroicons@2.1.1/dist/outline/index.js"></script>
+    
+    <style>
+        /* All your styles are unchanged */
+        .progress-ring-text { font-size: 0.75rem; font-weight: 600; }
+        .modal-backdrop { background-color: rgba(0, 0, 0, 0.5); transition: opacity 0.3s ease-in-out; }
+        .modal-content { transition: all 0.3s ease-in-out; transform: translateY(-20px); opacity: 0; }
+        .modal.active .modal-backdrop { opacity: 1; }
+        .modal.active .modal-content { transform: translateY(0); opacity: 1; }
+        .progress-bar { background-color: #e9ecef; border-radius: 9999px; overflow: hidden; height: 8px; }
+        .progress-bar-inner { height: 100%; border-radius: 9999px; transition: width 0.3s ease; }
+        .progress-ring-circle { transition: stroke-dashoffset 0.5s ease-out; transform: rotate(-90deg); transform-origin: 50% 50%; }
+        .progress-ring-text { font-size: 1rem; font-weight: 600; }
+        /* Style for club activity images */
+        .activity-card-image {
+            height: 150px; /* Fixed height for consistency */
+            object-fit: cover; /* Crop image nicely */
+            width: 100%;
+        }
+        
+        /* REMOVED: #tsparticles style */
+    </style>
+</head>
+<body class="bg-blue-50 min-h-screen flex flex-col">
+
+    <nav class="bg-white shadow-sm sticky top-0 z-20">
+        <div class="w-full mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex-shrink-0 flex items-center">
+                    <h1 class="text-xl font-bold text-blue-600">🏠 HOSTEL MANAGEMENT</h1>
+                    <span class="ml-2 text-gray-500 font-medium hidden sm:inline">| Indian Institute of Technology</span>
+                </div>
+                <div class="flex items-center">
+                    <button class="flex items-center text-sm font-medium text-red-600 hover:text-red-800">
+                        <hero-icon-outline name="exclamation-circle" class="h-5 w-5 mr-1"></hero-icon-outline>
+                        Complaints
+                    </button>
+                    <div class="ml-6 flex items-center">
+                        <span class="text-sm font-medium text-gray-700 mr-3">👨‍💼 Admin</span>
+                        <div class="flex-shrink-0">
+                            <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-yellow-400">
+                                <span class="font-medium text-white">A</span>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <button id="admin-logout-btn" class="ml-6 flex items-center text-sm font-medium text-gray-600 hover:text-gray-900">
+                        <hero-icon-outline name="arrow-right-on-rectangle" class="h-5 w-5 mr-1"></hero-icon-outline>
+                        Logout
+                    </button>
+                    </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow">
+        
+        <div id="dashboard-view">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                
+                <div class="bg-indigo-50 p-5 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-sm font-medium text-indigo-900 opacity-70">🏢 TOTAL CAPACITY</span>
+                            <p class="text-3xl font-extrabold text-indigo-900 mt-2" id="stat-total-capacity">0</p>
+                            <p class="text-sm text-indigo-900 opacity-60">Total Hostel Units</p>
+                        </div>
+                        <div class="p-3 bg-white rounded-full shadow-md">
+                            <hero-icon-outline name="building-office-2" class="h-6 w-6 text-indigo-500"></hero-icon-outline>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-amber-50 p-5 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-sm font-medium text-amber-900 opacity-70">📊 Feedback</span>
+                            <p class="text-3xl font-extrabold text-amber-900 mt-2" id="stat-Feedback-percent">0%</p>
+                            <p class="text-sm text-amber-900 opacity-60">Feedback</p>
+                        </div>
+                        <div class="relative h-20 w-20 flex-shrink-0">
+                            <svg class="h-full w-full" width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="18" cy="18" r="16" fill="none" class="text-amber-100" stroke-width="5"></circle>
+                                <circle cx="18" cy="18" r="16" fill="none" class="progress-ring-circle text-amber-400" 
+                                        stroke-width="5" 
+                                        stroke-dasharray="100" 
+                                        stroke-dashoffset="100" 
+                                        stroke-linecap="round" 
+                                        id="stat-Feedback-ring"></circle>
+                            </svg>
+                            <div class="absolute top-0 left-0 flex h-full w-full items-center justify-center">
+                                <span class="progress-ring-text text-amber-600" id="stat-Feedback-label">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-red-50 p-5 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-sm font-medium text-red-900 opacity-70">⚠️ OPEN COMPLAINTS</span>
+                            <p class="text-3xl font-extrabold text-red-900 mt-2">03</p>
+                            <p class="text-sm text-red-900 opacity-60">Pending Resolution</p>
+                        </div>
+                        <div class="p-3 bg-white rounded-full shadow-md">
+                            <hero-icon-outline name="exclamation-triangle" class="h-6 w-6 text-red-500"></hero-icon-outline>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-emerald-50 p-5 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-sm font-medium text-emerald-900 opacity-70">👥 DAILY ATTENDANCE</span>
+                            <p class="text-3xl font-extrabold text-emerald-900 mt-2" id="stat-attendance-percent">98%</p>
+                            <p class="text-sm text-emerald-900 opacity-60">Latest Check-in Rate</p>
+                        </div>
+                        <div class="relative h-20 w-20 flex-shrink-0">
+                            <svg class="h-full w-full" width="36" height="36" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="18" cy="18" r="16" fill="none" class="text-emerald-100" stroke-width="5"></circle>
+                                <circle cx="18" cy="18" r="16" fill="none" class="progress-ring-circle text-emerald-400" 
+                                        stroke-width="5" 
+                                        stroke-dasharray="100" 
+                                        stroke-dashoffset="2" 
+                                        stroke-linecap="round"
+                                        id="stat-attendance-ring"></circle>
+                            </svg>
+                            <div class="absolute top-0 left-0 flex h-full w-full items-center justify-center">
+                                <span class="progress-ring-text text-emerald-600" id="stat-attendance-label">98%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <div class="mt-10">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                    <h2 class="text-2xl font-semibold text-gray-900">🏘️ Hostel Block Summary</h2>
+                    <button id="show-add-block-modal-btn" class="mt-4 sm:mt-0 flex items-center px-5 py-3 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 transition-all duration-300 hover:scale-105">
+                        <hero-icon-solid name="plus" class="h-5 w-5 mr-2"></hero-icon-solid>
+                        ➕ Add New Block
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="hostel-block-container">
+                </div>
+            </div>
+
+            <div class="mt-10">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                    <h2 class="text-2xl font-semibold text-gray-900">📅 Events & Announcements</h2>
+                    <button id="show-add-event-modal-btn" class="mt-4 sm:mt-0 flex items-center px-5 py-3 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 transition-all duration-300 hover:scale-105">
+                        <hero-icon-solid name="calendar-days" class="h-5 w-5 mr-2"></hero-icon-solid>
+                        ➕ Add New Event
+                    </button>
+                </div>
+                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="event-list-container">
+                       </div>
+            </div>
+
+            <div class="mt-10">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+                    <h2 class="text-2xl font-semibold text-gray-900">🎭 Club Activities / Gymkhana</h2>
+                    <button id="show-add-club-activity-modal-btn" class="mt-4 sm:mt-0 flex items-center px-5 py-3 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 transition-all duration-300 hover:scale-105">
+                        <hero-icon-solid name="puzzle-piece" class="h-5 w-5 mr-2"></hero-icon-solid>
+                        ➕ Add New Activity
+                    </button>
+                </div>
+                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="club-activity-container">
+                       </div>
+            </div>
+            </div> <div id="detail-view" class="hidden">
+             <div class="relative mb-6 pb-4">
+                <button id="back-to-dashboard-btn" class="flex items-center text-sm font-medium text-gray-600 hover:text-gray-900">
+                    <hero-icon-solid name="arrow-left" class="h-4 w-4 mr-2"></hero-icon-solid>
+                    🔙 Back to Dashboard
+                </button>
+                <div class="flex items-center justify-center absolute inset-x-0 top-0 -z-10">
+                     <h1 id="detail-hostel-name" class="text-xl sm:text-3xl font-bold text-gray-800" style="color: #4b0082;"></h1>
+                </div>
+             </div>
+            
+            <div class="bg-white p-4 sm:p-6 rounded-lg shadow-md border-l-8 border-blue-500 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                    <div>
+                        <span class="text-gray-500">🏢 Capacity: </span>
+                        <span class="text-xl sm:text-2xl font-bold" style="color: #800080;" id="detail-stat-capacity">0</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">📊 Feedback: </span>
+                        <span class="text-xl sm:text-2xl font-bold" style="color: #ffa500;" id="detail-stat-Feedback">0</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">🛏️ Available Beds: </span>
+                        <span class="text-xl sm:text-2xl font-bold" style="color: #008000;" id="detail-stat-available">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                <div class="flex flex-wrap gap-4">
+                     <button id="show-add-student-modal-btn" class="flex items-center px-5 py-3 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 transition-all duration-300 hover:scale-105">
+                        <hero-icon-solid name="user-plus" class="h-5 w-5 mr-2"></hero-icon-solid>
+                        👨‍🎓 Add New Student
+                    </button>
+                    <button id="show-add-room-modal-btn" class="flex items-center px-5 py-3 bg-blue-600 text-white font-medium rounded-lg shadow-md hover:bg-blue-700 transition-all duration-300 hover:scale-105">
+                        <hero-icon-solid name="building-office-plus" class="h-5 w-5 mr-2"></hero-icon-solid>
+                        🏢 Add New Room
+                    </button>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                    <input type="text" id="room-search-input" placeholder="🔍 Search room number..." class="px-4 py-2 border rounded-lg shadow-sm w-full sm:w-auto">
+                    <select id="room-filter-select" class="px-4 py-2 border rounded-lg shadow-sm w-full sm:w-auto">
+                        <option value="All">All Rooms</option>
+                        <option value="Full">🚫 Full</option>
+                        <option value="Available">✅ Available</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="room-list-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                 </div>
+        </div></main>
+
+    <footer class="mt-12 py-6 border-t border-gray-200 bg-white">
+        <div class="w-full mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-sm text-gray-500">
+                &copy; 2025 Indian Institute of Technology. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <div id="add-block-modal" class="modal hidden fixed inset-0 z-30 flex items-center justify-center">
+        <div class="modal-backdrop fixed inset-0" data-modal-hide="add-block-modal"></div>
+        <div class="modal-content bg-white p-6 rounded-lg shadow-xl z-40 w-full max-w-md mx-4">
+            <h2 class="text-xl font-semibold mb-4">🏘️ Add New Hostel Block</h2>
+            <form id="add-block-form" class="space-y-4">
+                <div>
+                    <label for="block-name" class="block text-sm font-medium text-gray-700">🏷️ Block Name</label>
+                    <input type="text" id="block-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="e.g., 🚺 Sarojini Hall" required>
+                </div>
+                 <div>
+                    <label for="block-key" class="block text-sm font-medium text-gray-700">🔑 Unique Key</label>
+                    <input type="text" id="block-key" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="e.g., 'sarojini' (lowercase, no spaces)" required>
+                </div>
+                <div>
+                    <label for="block-theme" class="block text-sm font-medium text-gray-700">🎨 Theme Color</label>
+                    <select id="block-theme" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="pink">🩷 Pink (Women)</option>
+                        <option value="blue">💙 Blue (Men)</option>
+                        <option value="green">💚 Green</option>
+                        <option value="purple">💜 Purple</option>
+                        <option value="yellow">💛 Yellow</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300" data-modal-hide="add-block-modal">❌ Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">💾 Save Block</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="add-room-modal" class="modal hidden fixed inset-0 z-30 flex items-center justify-center">
+        <div class="modal-backdrop fixed inset-0" data-modal-hide="add-room-modal"></div>
+        <div class="modal-content bg-white p-6 rounded-lg shadow-xl z-40 w-full max-w-md mx-4">
+            <h2 class="text-xl font-semibold mb-4">🏢 Add New Room</h2>
+            <form id="add-room-form" class="space-y-4">
+                <div>
+                    <label for="room-id" class="block text-sm font-medium text-gray-700">🏷️ Room ID</label>
+                    <input type="text" id="room-id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="e.g., A-103" required>
+                </div>
+                 <div>
+                    <label for="room-floor" class="block text-sm font-medium text-gray-700">🏢 Floor Details</label>
+                    <input type="text" id="room-floor" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="e.g., 1st Floor, A-Block" required>
+                </div>
+                <div>
+                    <label for="room-capacity" class="block text-sm font-medium text-gray-700">👥 Total Capacity</label>
+                    <input type="number" id="room-capacity" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="2" min="1" required>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300" data-modal-hide="add-room-modal">❌ Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">➕ Add Room</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="add-student-modal" class="modal hidden fixed inset-0 z-30 flex items-center justify-center">
+        <div class="modal-backdrop fixed inset-0" data-modal-hide="add-student-modal"></div>
+        <div class="modal-content bg-white p-6 rounded-lg shadow-xl z-40 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+            <h2 class="text-xl font-semibold mb-4">👨‍🎓 Add New Student</h2>
+            <form id="add-student-form" class="space-y-4">
+                 <h3 class-="text-sm font-medium text-gray-500 border-b pb-1">🔐 Login Details</h3>
+                 <div class="grid grid-cols-2 gap-4">
+                     <div>
+                        <label for="student-username" class="block text-sm font-medium text-gray-700">👤 Username</label>
+                        <input type="text" id="student-username" name="student-username" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                    </div>
+                    <div>
+                        <label for="student-password" class="block text-sm font-medium text-gray-700">🔒 Password</label>
+                        <input type="password" id="student-password" name="student-password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                    </div>
+                </div>
+
+                <h3 class-="text-sm font-medium text-gray-500 border-b pt-2 pb-1">🏠 Hostel Details</h3>
+                <div>
+                    <label for="student-room-id" class="block text-sm font-medium text-gray-700">🏢 Select Room</label>
+                    <select id="student-room-id" name="room-id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" required>
+                    </select>
+                </div>
+                <div>
+                    <label for="student-joining-date" class="block text-sm font-medium text-gray-700">📅 Joining Date</label>
+                    <input type="date" id="student-joining-date" name="joining-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                 <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="student-fee-status" class="block text-sm font-medium text-gray-700">💰 Fee Status</label>
+                        <select id="student-fee-status" name="fee-status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                            <option value="Paid">✅ Paid</option>
+                            <option value="Pending" selected>⏳ Pending</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="student-payment-method" class="block text-sm font-medium text-gray-700">💳 Payment Method</label>
+                        <select id="student-payment-method" name="payment-method" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <option value="Not Paid">❌ Not Paid</option>
+                            <option value="Cash">💵 Cash</option>
+                            <option value="Card">💳 Card</option>
+                            <option value="Online">🌐 Online</option>
+                        </select>
+                    </div>
+                </div>
+
+                <h3 class-="text-sm font-medium text-gray-500 border-b pt-2 pb-1">👤 Personal & Academic</h3>
+                <div>
+                    <label for="student-name" class="block text-sm font-medium text-gray-700">👤 Student Name</label>
+                    <input type="text" id="student-name" name="student-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Enter full name" required>
+                </div>
+                <div>
+                    <label for="student-course" class="block text-sm font-medium text-gray-700">🎓 Course</label>
+                    <input type="text" id="student-course" name="course" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="e.g., B.Tech">
+                </div>
+                <div>
+                    <label for="student-department" class="block text-sm font-medium text-gray-700">🏛️ Department</label>
+                    <input type="text" id="student-department" name="department" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="e.g., CSE">
+                </div>
+                <div>
+                    <label for="student-year" class="block text-sm font-medium text-gray-700">📚 Year</f-label>
+                    <input type="text" id="student-year" name="year" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="e.g., 3rd Year">
+                </div>
+                <div>
+                    <label for="student-email" class="block text-sm font-medium text-gray-700">📧 Email</label>
+                    <input type="email" id="student-email" name="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="student@iit.edu">
+                </div>
+                <div>
+                    <label for="student-phone" class="block text-sm font-medium text-gray-700">📞 Phone</label>
+                    <input type="tel" id="student-phone" name="phone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="+91 XXXXX XXXXX">
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300" data-modal-hide="add-student-modal">❌ Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">➕ Add Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="add-event-modal" class="modal hidden fixed inset-0 z-30 flex items-center justify-center">
+        <div class="modal-backdrop fixed inset-0" data-modal-hide="add-event-modal"></div>
+        <div class="modal-content bg-white p-6 rounded-lg shadow-xl z-40 w-full max-w-md mx-4">
+            <h2 class="text-xl font-semibold mb-4">📅 Add Event or Announcement</h2>
+            <form id="add-event-form" class="space-y-4">
+                 <div>
+                    <label for="event-title" class="block text-sm font-medium text-gray-700">🏷️ Title</label>
+                    <input type="text" id="event-title" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                </div>
+                 <div>
+                    <label for="event-type" class="block text-sm font-medium text-gray-700">📋 Type</label>
+                    <select id="event-type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="Sports">⚽ Sports</option>
+                        <option value="Club Activity">🎭 Club Activity</option>
+                        <option value="Announcement">📢 Announcement</option>
+                        <option value="General">📝 General</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="event-date" class="block text-sm font-medium text-gray-700">📅 Date</label>
+                    <input type="date" id="event-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                </div>
+                <div>
+                    <label for="event-description" class="block text-sm font-medium text-gray-700">📝 Description</label>
+                    <textarea id="event-description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300" data-modal-hide="add-event-modal">❌ Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">📝 Post Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="room-details-modal" class="modal hidden fixed inset-0 z-30 flex items-center justify-center">
+        <div class="modal-backdrop fixed inset-0" data-modal-hide="room-details-modal"></div>
+        <div class="modal-content bg-gray-50 rounded-lg shadow-xl z-40 w-full max-w-3xl mx-4 max-h-[90vh] flex flex-col">
+             <div class="flex justify-between items-center p-5 border-b bg-white rounded-t-lg">
+                 <div class="flex items-center gap-3">
+                    <h2 class="text-xl font-bold text-gray-800" id="modal-room-title">🏢 Room Details: A-101</h2>
+                    <span id="modal-room-complaints-badge" class="hidden items-center text-xs font-bold px-3 py-1 bg-red-100 text-red-600 rounded-full">
+                        <hero-icon-solid name="exclamation-circle" class="h-4 w-4 mr-1"></hero-icon-solid>
+                        <span id="modal-room-complaints-count">1</span> Complaint
+                    </span>
+                 </div>
+                <button data-modal-hide="room-details-modal" class="text-gray-400 hover:text-gray-600">
+                    <hero-icon-solid name="x-mark" class="h-6 w-6"></hero-icon-solid>
+                </button>
+             </div>
+            <div class="p-6 overflow-y-auto space-y-6">
+                <div class="bg-white p-4 rounded-lg shadow-sm">
+                    <div class="flex gap-4 text-center">
+                        <div class="flex-1">
+                            <span class="text-sm text-gray-500">🏢 Capacity</span>
+                            <p class="text-2xl font-bold text-gray-800" id="modal-room-capacity">2</p>
+                        </div>
+                        <div class="flex-1">
+                            <span class="text-sm text-gray-500">📊 Feedback</span>
+                            <p class="text-2xl font-bold text-blue-600" id="modal-room-Feedback">2</p>
+                        </div>
+                        <div class="flex-1">
+                            <span class="text-sm text-gray-500">🛏️ Available Beds</span>
+                            <p class="text-2xl font-bold text-green-600" id="modal-room-available">0</p>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900" id="modal-occupant-title">👨‍🎓 Current Occupants (2)</h3>
+                        <button id="modal-delete-room-btn" class="flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg shadow-md hover:bg-red-700">
+                            <hero-icon-solid name="trash" class="h-5 w-5 mr-2"></hero-icon-solid>
+                            🗑️ Delete Room
+                        </button>
+                    </div>
+                    <div id="modal-occupant-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <hero-icon-solid name="exclamation-triangle" class="h-5 w-5 text-yellow-600"></hero-icon-solid>
+                        <h3 class="text-lg font-semibold text-gray-900">⚠️ Open Issues In This Room</h3>
+                    </div>
+                    <div id="modal-issues-container" class="space-y-3"></div>
+                </div>
+            </div>
+            <div class="p-4 bg-white border-t rounded-b-lg text-right">
+                <a href="#" id="modal-view-all-complaints" class="text-sm font-medium text-blue-600 hover:text-blue-800">
+                    View All Complaint Tickets &rarr;
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div id="add-club-activity-modal" class="modal hidden fixed inset-0 z-30 flex items-center justify-center">
+        <div class="modal-backdrop fixed inset-0" data-modal-hide="add-club-activity-modal"></div>
+        <div class="modal-content bg-white p-6 rounded-lg shadow-xl z-40 w-full max-w-md mx-4">
+            <h2 class="text-xl font-semibold mb-4">🎭 Add New Club Activity</h2>
+            <form id="add-club-activity-form" class="space-y-4">
+                <div>
+                    <label for="club-activity-title" class="block text-sm font-medium text-gray-700">🏷️ Activity Title</label>
+                    <input type="text" id="club-activity-title" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="e.g., Inter-Hostel Cricket Finals" required>
+                </div>
+                 <div>
+                    <label for="club-activity-type" class="block text-sm font-medium text-gray-700">📋 Activity Type</label>
+                    <select id="club-activity-type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="Sports">⚽ Sports</option>
+                        <option value="Cultural">💃 Cultural</option>
+                        <option value="Technical">💻 Technical</option>
+                        <option value="Workshop">🔧 Workshop</option>
+                        <option value="General">📝 General</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="club-activity-date" class="block text-sm font-medium text-gray-700">📅 Date</label>
+                    <input type="date" id="club-activity-date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                </div>
+                <div>
+                    <label for="club-activity-description" class="block text-sm font-medium text-gray-700">📝 Description</label>
+                    <textarea id="club-activity-description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Add relevant details..."></textarea>
+                </div>
+                <div>
+                    <label for="club-activity-image-file" class="block text-sm font-medium text-gray-700">🖼️ Upload Image</label>
+                    <input type="file" id="club-activity-image-file" class="mt-1 block w-full text-sm text-gray-500
+                        file:mr-4 file:py-2 file:px-4
+                        file:rounded-full file:border-0
+                        file:text-sm file:font-semibold
+                        file:bg-blue-50 file:text-blue-700
+                        hover:file:bg-blue-100"
+                        accept="image/*">
+                    <p class="mt-1 text-xs text-gray-500">Upload an image from your device (PNG, JPG, etc.).</p>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300" data-modal-hide="add-club-activity-modal">❌ Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">📝 Post Activity</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+   <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // REMOVED: Particle script initialization
+        
+        // --- 1. GLOBAL STATE --- (Unchanged)
+        let appState = { blocks: [] };
+        let eventData = [
+            { id: 1, title: '⚽ Inter-Hostel Cricket Match', type: 'Sports', date: '2025-11-10', description: 'Finals between Men\'s Hostel and Women\'s Hostel.' },
+            { id: 2, title: '🍽️ Mess Committee Meeting', type: 'Announcement', date: '2025-11-05', description: 'Discussing the new menu for next month.' }
+        ];
+        let currentRoomData = null; 
+
+        // --- 2. DOM Elements --- (Unchanged)
+        const dashboardView = document.getElementById('dashboard-view');
+        const detailView = document.getElementById('detail-view');
+        const hostelBlockContainer = document.getElementById('hostel-block-container');
+        const statTotalCapacity = document.getElementById('stat-total-capacity');
+        const statFeedbackPercent = document.getElementById('stat-Feedback-percent');
+        const statFeedbackLabel = document.getElementById('stat-Feedback-label');
+        const statFeedbackRing = document.getElementById('stat-Feedback-ring');
+        const eventListContainer = document.getElementById('event-list-container');
+        const detailHostelName = document.getElementById('detail-hostel-name');
+        const backToDashboardBtn = document.getElementById('back-to-dashboard-btn');
+        const roomListContainer = document.getElementById('room-list-container');
+        const detailStatCapacity = document.getElementById('detail-stat-capacity');
+        const detailStatFeedback = document.getElementById('detail-stat-Feedback');
+        const detailStatAvailable = document.getElementById('detail-stat-available');
+        const roomSearchInput = document.getElementById('room-search-input');
+        const roomFilterSelect = document.getElementById('room-filter-select');
+        const showAddBlockModalBtn = document.getElementById('show-add-block-modal-btn');
+        const addBlockForm = document.getElementById('add-block-form');
+        const showAddRoomModalBtn = document.getElementById('show-add-room-modal-btn');
+        const addRoomForm = document.getElementById('add-room-form');
+        const showAddStudentModalBtn = document.getElementById('show-add-student-modal-btn');
+        const addStudentForm = document.getElementById('add-student-form');
+        const studentRoomSelect = document.getElementById('student-room-id');
+        const showAddEventModalBtn = document.getElementById('show-add-event-modal-btn');
+        const addEventForm = document.getElementById('add-event-form');
+        const adminLogoutBtn = document.getElementById('admin-logout-btn'); 
+        
+        // --- Room Detail Modal Elements --- (Unchanged)
+        const roomDetailsModal = document.getElementById('room-details-modal');
+        const modalRoomTitle = document.getElementById('modal-room-title');
+        const modalRoomComplaintsBadge = document.getElementById('modal-room-complaints-badge');
+        const modalRoomComplaintsCount = document.getElementById('modal-room-complaints-count');
+        const modalRoomCapacity = document.getElementById('modal-room-capacity');
+        const modalRoomFeedback = document.getElementById('modal-room-Feedback');
+        const modalRoomAvailable = document.getElementById('modal-room-available');
+        const modalOccupantTitle = document.getElementById('modal-occupant-title');
+        const modalOccupantContainer = document.getElementById('modal-occupant-container');
+        const modalIssuesContainer = document.getElementById('modal-issues-container');
+        const modalDeleteRoomBtn = document.getElementById('modal-delete-room-btn'); 
+
+        // --- Club Activity Elements --- (Unchanged)
+        const clubActivityContainer = document.getElementById('club-activity-container');
+        const showAddClubActivityModalBtn = document.getElementById('show-add-club-activity-modal-btn');
+        const addClubActivityForm = document.getElementById('add-club-activity-form');
+
+
+        // --- 3. THEME/HELPER DATA --- (Unchanged)
+        const themes = { 
+            pink: { border: 'border-pink-500', bg: 'bg-pink-100', text: 'text-pink-600', icon: 'user-group' },
+            blue: { border: 'border-blue-500', bg: 'bg-blue-100', text: 'text-blue-600', icon: 'user-group' },
+            green: { border: 'border-green-500', bg: 'bg-green-100', text: 'text-green-600', icon: 'building-office' },
+            purple: { border: 'border-purple-500', bg: 'bg-purple-100', text: 'text-purple-600', icon: 'academic-cap' },
+            yellow: { border: 'border-yellow-500', bg: 'bg-yellow-100', text: 'text-yellow-600', icon: 'beaker' },
+        };
+        const eventThemes = { 
+            'Sports': { border: 'border-green-500', bg: 'bg-green-100', text: 'text-green-700' },
+            'Club Activity': { border: 'border-purple-500', bg: 'bg-purple-100', text: 'text-purple-700' },
+            'Announcement': { border: 'border-red-500', bg: 'bg-red-100', text: 'text-red-700' },
+            'General': { border: 'border-blue-500', bg: 'bg-blue-100', text: 'text-blue-700' },
+        };
+        const clubActivityThemes = { 
+            'Sports': { border: 'border-orange-500', bg: 'bg-orange-100', text: 'text-orange-700' },
+            'Cultural': { border: 'border-pink-500', bg: 'bg-pink-100', text: 'text-pink-700' },
+            'Technical': { border: 'border-indigo-500', bg: 'bg-indigo-100', text: 'text-indigo-700' },
+            'Workshop': { border: 'border-yellow-500', bg: 'bg-yellow-100', text: 'text-yellow-700' },
+            'General': { border: 'border-gray-500', bg: 'bg-gray-100', text: 'text-gray-700' },
+        };
+        const getStatus = (current, max) => { 
+            if (current >= max) return { text: '🚫 Full', classes: 'bg-red-500 text-white', progress: 'bg-red-500' };
+            return { text: '✅ Available', classes: 'bg-green-500 text-white', progress: 'bg-green-500' };
+        };
+
+
+        // --- 4. RENDER FUNCTIONS --- (Unchanged)
+
+        async function loadHostelData() {
+            try {
+                const res = await fetch('http://localhost:5000/api/blocks');
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                const data = await res.json();
+                if (data.success) {
+                    appState.blocks = data.blocks; 
+                    console.log('✅ Data reloaded from server:', appState.blocks);
+                    if (!dashboardView.classList.contains('hidden')) {
+                        renderDashboard();
+                    }
+                    if (!detailView.classList.contains('hidden')) {
+                        const currentBlockKey = detailView.dataset.currentHostelKey;
+                        if (currentBlockKey) {
+                            renderDetailView(currentBlockKey);
+                        }
+                    }
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                console.error('❌ Failed to load hostel data:', error);
+                hostelBlockContainer.innerHTML = `<p class="text-red-500 col-span-full">Error: Could not load data from server. ${error.message}</p>`;
+            }
+        }
+
+        async function loadClubActivities() {
+            try {
+                const res = await fetch('http://localhost:5000/api/activities');
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                const data = await res.json();
+                if (data.success) {
+                    console.log('✅ Club Activities reloaded from server:', data.activities);
+                    renderClubActivities(data.activities); 
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                console.error('❌ Failed to load club activities:', error);
+                clubActivityContainer.innerHTML = `<p class="text-red-500 col-span-full">Error: Could not load activities. ${error.message}</p>`;
+            }
+        }
+
+        function renderDashboard() {
+            hostelBlockContainer.innerHTML = '';
+            let grandTotalCapacity = 0;
+            let grandTotalStudents = 0;
+
+            if (!appState.blocks || appState.blocks.length === 0) {
+                 hostelBlockContainer.innerHTML = `<p class="text-gray-500 col-span-full">🏘️ No hostel blocks found. Add one to get started!</p>`;
+            }
+
+            for (const block of appState.blocks) {
+                const theme = themes[block.blockTheme] || themes.blue;
+                const totalRooms = block.rooms ? block.rooms.length : 0;
+                const currentStudents = block.rooms ? block.rooms.reduce((acc, room) => acc + (room.students ? room.students.length : 0), 0) : 0;
+                const totalCapacity = block.rooms ? block.rooms.reduce((acc, room) => acc + (room.capacity || 0), 0) : 0;
+                const occupiedRooms = block.rooms ? block.rooms.filter(room => room.students && room.students.length > 0).length : 0;
+                
+                grandTotalCapacity += totalCapacity;
+                grandTotalStudents += currentStudents;
+
+                const blockHTML = `
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden border-l-8 ${theme.border} relative transition-all duration-300 hover:shadow-xl hover:scale-105">
+                        <button class="remove-block-btn absolute top-3 right-3 p-1 text-red-500 hover:bg-red-100 rounded-full transition-colors duration-200 z-10" data-block-id="${block._id}" data-block-name="${block.blockName}" title="Delete Block">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </button>
+                        <a href="#" class="block-link block hover:bg-gray-50 p-6" data-hostel-key="${block.blockKey}">
+                            <div class="flex items-center mb-4">
+                                <div class="p-3 ${theme.bg} rounded-lg"><hero-icon-solid name="${theme.icon}" class="h-6 w-6 ${theme.text}"></hero-icon-solid></div>
+                                <h3 class="text-2xl font-bold text-gray-900 ml-4">${block.blockName}</h3>
+                            </div>
+                            <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                <div><span class="text-gray-500">🏢 Total Rooms</span><p class="text-lg font-semibold text-gray-900">${totalRooms}</p></div>
+                                <div><span class="text-gray-500">👥 Occupied Rooms</span><p class="text-lg font-semibold text-gray-900">${occupiedRooms}</p></div>
+                                <div><span class="text-gray-500">👨‍🎓 Current Students</span><p class="text-lg font-semibold text-gray-900">${currentStudents}</p></div>
+                                <div><span class="text-gray-500">🏢 Total Capacity</span><p class="text-lg font-semibold text-gray-900">${totalCapacity}</p></div>
+                            </div>
+                        </a>
+                    </div>
+                `;
+                hostelBlockContainer.innerHTML += blockHTML;
+            }
+            
+            statTotalCapacity.textContent = grandTotalCapacity;
+            const FeedbackPercent = grandTotalCapacity > 0 ? (grandTotalStudents / grandTotalCapacity * 100) : 0;
+            statFeedbackPercent.textContent = FeedbackPercent.toFixed(1) + '%';
+            statFeedbackLabel.textContent = FeedbackPercent.toFixed(0) + '%';
+            statFeedbackRing.style.strokeDashoffset = 100 - FeedbackPercent;
+        }
+
+        function renderDetailView(blockKey) {
+             const block = appState.blocks.find(b => b.blockKey === blockKey);
+             if (!block) { alert('Error: Could not find block data.'); backToDashboardBtn.click(); return; }
+             detailView.dataset.currentHostelKey = block.blockKey;
+             const theme = themes[block.blockTheme] || themes.blue;
+             detailHostelName.innerHTML = `<span class="p-2 ${theme.bg} ${theme.text} rounded-lg mr-2"><hero-icon-solid name="${theme.icon}" class="h-6 w-6 inline-block"></hero-icon-solid></span> ${block.blockName}`;
+             let hostelCapacity = 0, hostelFeedback = 0;
+             roomListContainer.innerHTML = '';
+             studentRoomSelect.innerHTML = '<option value="" disabled selected>-- Select an available room --</option>';
+             const rooms = block.rooms || [];
+             rooms.forEach(room => {
+                const current = room.students ? room.students.length : 0;
+                const max = room.capacity; hostelCapacity += max; hostelFeedback += current;
+                const status = getStatus(current, max); const percent = max > 0 ? (current / max) * 100 : 0;
+                const studentNames = (room.students && room.students.length > 0) ? room.students.map(s => s.name).join(', ') : 'None';
+                const roomHTML = `<div class="room-card bg-white p-5 rounded-lg shadow-md transition-all duration-300 hover:shadow-xl hover:scale-105 cursor-pointer" data-room-id="${room.roomNumber}" data-room-status="${status.text}"><div class="flex justify-between items-center mb-2"><h3 class="text-xl font-bold text-gray-800">${room.roomNumber}</h3><span class="text-xs font-bold px-3 py-1 rounded-full ${status.classes}">${status.text}</span></div><p class="text-sm text-gray-500 mb-4">${room.floor}</p><div class="progress-bar mb-2"><div class="progress-bar-inner ${status.progress}" style="width: ${percent}%;"></div></div><p class="text-sm text-gray-700 font-medium">📊 Feedback: <span class="font-normal">${current}/${max}</span></p><p class="text-sm text-gray-700 font-medium truncate">👨‍🎓 Students: <span class="font-normal">${studentNames}</span></p></div>`;
+                roomListContainer.innerHTML += roomHTML;
+                if (status.text === '✅ Available') { studentRoomSelect.innerHTML += `<option value="${room._id}">${room.roomNumber} (${current}/${max})</option>`; }
+             });
+             if (rooms.length === 0) { roomListContainer.innerHTML = '<p class="text-gray-500 text-center col-span-full">🏢 No rooms added to this block yet.</p>'; }
+             detailStatCapacity.textContent = hostelCapacity; detailStatFeedback.textContent = hostelFeedback; detailStatAvailable.textContent = hostelCapacity - hostelFeedback;
+             roomSearchInput.value = ''; roomFilterSelect.value = 'All';
+         }
+        
+        function renderRoomDetailsModal(room, block) {
+            if (!room) { console.error("Room data is missing."); return; }
+            currentRoomData = room; 
+            modalRoomTitle.textContent = `Room Details: ${room.roomNumber}`;
+            modalRoomCapacity.textContent = room.capacity;
+            const Feedback = room.students ? room.students.length : 0;
+            const available = room.capacity - Feedback;
+            modalRoomFeedback.textContent = Feedback; modalRoomAvailable.textContent = available;
+            modalOccupantTitle.textContent = `Current Occupants (${Feedback})`;
+            modalOccupantContainer.innerHTML = '';
+            if (Feedback === 0) {
+                modalOccupantContainer.innerHTML = '<p class="text-gray-500 md:col-span-2">This room is empty.</p>';
+            } else {
+                room.students.forEach(student => {
+                    const feeStatus = student.feeStatus || 'Pending';
+                    const statusColor = feeStatus.toLowerCase() === 'paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700';
+                    let yearColor = 'bg-gray-100 text-gray-700'; 
+                    if (student.year && student.year.toLowerCase().includes('3')) yearColor = 'bg-pink-100 text-pink-700';
+                    if (student.year && student.year.toLowerCase().includes('2')) yearColor = 'bg-yellow-100 text-yellow-700';
+                    if (student.year && student.year.toLowerCase().includes('1')) yearColor = 'bg-blue-100 text-blue-700'; 
+                    const studentHTML = `<div class="bg-white border rounded-lg p-4 shadow-sm relative"><button class="remove-student-btn absolute top-2 right-2 p-1 text-red-500 hover:bg-red-100 rounded-full transition-colors duration-200 z-10" data-student-id="${student._id}" title="Remove Student"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></button><span class="absolute top-3 left-3 text-xs font-semibold px-2 py-0.5 ${yearColor} rounded">${student.year || 'N/A'}</span><div class="flex items-center gap-4 mt-8"><span class="flex-shrink-0 h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center"><hero-icon-solid name="user" class="h-6 w-6 text-indigo-500"></hero-icon-solid></span><div><h4 class="font-bold text-gray-800">${student.name}</h4><p class="text-sm text-blue-600">${student.course || ''} ${student.department || ''}</p></div></div><div class="mt-4 space-y-2 text-sm text-gray-600"><p><strong>📧 Email:</strong> ${student.email || 'N/A'}</p><p><strong>📞 Phone:</strong> ${student.phone || 'N/A'}</p><p><strong>📅 Joined:</strong> ${student.joiningDate ? new Date(student.joiningDate).toLocaleDateString() : 'N/A'}</p></div><div class="flex justify-between items-center mt-4 pt-3 border-t"><div><span class="text-xs font-medium">💰 Fee Status:</span><span class="text-sm font-bold px-3 py-1 rounded ${statusColor}">${feeStatus === 'Pending' ? '⏳ Due' : feeStatus}</span></div><a href="/student-profile.html?id=${student._id}" class="view-student-details text-sm font-medium text-blue-600 hover:underline" data-student-id="${student._id}">👀 View Full Details</a></div></div>`;
+                    modalOccupantContainer.innerHTML += studentHTML;
+                });
+            }
+            modalIssuesContainer.innerHTML = '';
+            const complaints = room.complaints || []; 
+            if (complaints.length === 0 && room.roomNumber === 'A-101') { complaints.push({ title: '❄️ Broken AC/Leakage', status: 'Critical', _id: 'fake123' }); }
+            if (complaints.length === 0) {
+                modalIssuesContainer.innerHTML = '<p class="text-gray-500">✅ No open issues reported for this room.</p>';
+                modalRoomComplaintsBadge.classList.add('hidden');
+            } else {
+                complaints.forEach(complaint => {
+                    const statusColor = complaint.status.toLowerCase() === 'critical' ? 'bg-red-500 text-white' : 'bg-yellow-500 text-white';
+                    const issueHTML = `<div class="flex justify-between items-center bg-white p-3 rounded-lg shadow-sm border"><p class="font-medium text-gray-700">${complaint.title}</p><span class="text-xs font-bold px-3 py-1 rounded-full ${statusColor}">${complaint.status}</span></div>`;
+                    modalIssuesContainer.innerHTML += issueHTML;
+                });
+                modalRoomComplaintsCount.textContent = complaints.length;
+                modalRoomComplaintsBadge.classList.remove('hidden');
+            }
+        } 
+
+        function renderEvents() {
+             eventListContainer.innerHTML = '';
+            if (eventData.length === 0) {
+                eventListContainer.innerHTML = `<p class="text-gray-500 col-span-full">📅 No events or announcements posted yet.</p>`; return;
+            }
+            eventData.slice().reverse().forEach(event => {
+                const theme = eventThemes[event.type] || eventThemes.General;
+                const formattedDate = new Date(event.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                const eventHTML = `<div class="bg-white rounded-lg shadow-md overflow-hidden border-l-8 ${theme.border} transition-all duration-300 hover:shadow-xl hover:scale-105"><div class="p-5"><div class="flex justify-between items-center mb-2"><h3 class="text-xl font-bold text-gray-800">${event.title}</h3><span class="text-xs font-bold px-3 py-1 rounded-full ${theme.bg} ${theme.text}">${event.type}</span></div><p class="text-sm font-medium text-gray-600 mb-3">📅 ${formattedDate}</p><p class="text-sm text-gray-700">${event.description}</p></div></div>`;
+                eventListContainer.innerHTML += eventHTML;
+            });
+        }
+        
+        function renderClubActivities(activities) { 
+            clubActivityContainer.innerHTML = '';
+            if (!activities || activities.length === 0) {
+                clubActivityContainer.innerHTML = `<p class="text-gray-500 col-span-full">🎭 No club activities posted yet.</p>`;
+                return;
+            }
+            activities.forEach(activity => {
+                const theme = clubActivityThemes[activity.type] || clubActivityThemes.General;
+                const formattedDate = new Date(activity.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                const imageUrl = activity.imageUrl || `https://via.placeholder.com/300x150/${theme.bg.split('-')[1]}00/FFFFFF?text=${activity.type}`; 
+                
+                const activityHTML = `
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden border-l-8 ${theme.border} transition-all duration-300 hover:shadow-xl hover:scale-105 flex flex-col relative">
+                        <button class="remove-activity-btn absolute top-3 right-3 p-1 text-red-500 hover:bg-red-100 rounded-full transition-colors duration-200 z-10" data-activity-id="${activity._id}" data-activity-title="${activity.title}" title="Delete Activity">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </button>
+                        <img src="${imageUrl}" alt="${activity.title}" class="activity-card-image">
+                        <div class="p-5 flex flex-col flex-grow">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-bold text-gray-800">${activity.title}</h3>
+                                <span class="text-xs font-bold px-3 py-1 rounded-full ${theme.bg} ${theme.text} flex-shrink-0 ml-2">${activity.type}</span>
+                            </div>
+                            <p class="text-sm font-medium text-gray-600 mb-3">📅 ${formattedDate}</p>
+                            <p class="text-sm text-gray-700 flex-grow">${activity.description || ''}</p>
+                            </div>
+                    </div>
+                `;
+                clubActivityContainer.innerHTML += activityHTML;
+            });
+        }
+        
+
+        // --- 5. EVENT HANDLERS --- (Unchanged)
+
+        adminLogoutBtn.addEventListener('click', () => {
+            window.location.href = '/login.html';
+        });
+
+        hostelBlockContainer.addEventListener('click', (e) => {
+            const deleteButton = e.target.closest('.remove-block-btn');
+            if (deleteButton) {
+                e.preventDefault(); 
+                const blockId = deleteButton.dataset.blockId;
+                const blockName = deleteButton.dataset.blockName;
+                handleDeleteBlock(blockId, blockName); 
+                return; 
+            }
+            const cardLink = e.target.closest('.block-link');
+            if (cardLink) {
+                e.preventDefault();
+                const hostelKey = cardLink.dataset.hostelKey;
+                renderDetailView(hostelKey); 
+                dashboardView.classList.add('hidden');
+                detailView.classList.remove('hidden');
+                window.scrollTo(0, 0);
+            }
+        });
+        
+        backToDashboardBtn.addEventListener('click', () => { 
+            detailView.classList.add('hidden');
+            dashboardView.classList.remove('hidden');
+            renderDashboard(); 
+            renderEvents(); 
+            loadClubActivities(); 
+        });
+        
+        function filterRooms() { 
+            const searchTerm = roomSearchInput.value.toLowerCase();
+            const filterValue = roomFilterSelect.value;
+            const roomCards = roomListContainer.querySelectorAll('.room-card');
+            roomCards.forEach(card => {
+                const roomId = card.dataset.roomId.toLowerCase();
+                const roomStatus = card.dataset.roomStatus;
+                const matchesSearch = roomId.includes(searchTerm);
+                const matchesFilter = (filterValue === 'All') || (filterValue === roomStatus);
+                if (matchesSearch && matchesFilter) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+           }
+        roomSearchInput.addEventListener('input', filterRooms);
+        roomFilterSelect.addEventListener('change', filterRooms);
+
+        
+        roomListContainer.addEventListener('click', (e) => {
+            const card = e.target.closest('.room-card'); if (!card) return; if (e.target.closest('button, a')) return; e.preventDefault();
+            const blockKey = detailView.dataset.currentHostelKey; const roomNumber = card.dataset.roomId; const block = appState.blocks.find(b => b.blockKey === blockKey); if (!block) { console.error('Block not found'); return; } const room = (block.rooms || []).find(r => r.roomNumber === roomNumber); if (!room) { console.error('Room not found'); return; } renderRoomDetailsModal(room, block); showModal('room-details-modal');
+        });
+
+        roomDetailsModal.addEventListener('click', (e) => {
+            const link = e.target.closest('.view-student-details');
+            if (link) { e.preventDefault(); const studentId = link.dataset.studentId; window.location.href = `/student-profile.html?id=${studentId}`; }
+        });
+
+        modalDeleteRoomBtn.addEventListener('click', () => { 
+             handleDeleteRoom();
+        });
+
+        modalOccupantContainer.addEventListener('click', (e) => { 
+            const removeButton = e.target.closest('.remove-student-btn');
+            if (removeButton) { const studentId = removeButton.dataset.studentId; handleRemoveStudent(studentId); }
+        });
+
+        clubActivityContainer.addEventListener('click', (e) => {
+            const deleteButton = e.target.closest('.remove-activity-btn');
+            if (deleteButton) {
+                e.preventDefault(); 
+                const activityId = deleteButton.dataset.activityId;
+                const activityTitle = deleteButton.dataset.activityTitle;
+                handleDeleteClubActivity(activityId, activityTitle); 
+            }
+        });
+
+        
+        // Modal Functions (Unchanged)
+        function showModal(modalId) { const modal = document.getElementById(modalId); if (modal) { modal.classList.remove('hidden'); setTimeout(() => modal.classList.add('active'), 10); } }
+        function hideModal(modalId) { const modal = document.getElementById(modalId); if (modal) { modal.classList.remove('active'); setTimeout(() => modal.classList.add('hidden'), 300); } }
+        document.querySelectorAll('[data-modal-hide]').forEach(el => { el.addEventListener('click', () => { hideModal(el.dataset.modalHide); }); });
+
+        // --- Delete Block Function --- (Unchanged)
+        async function handleDeleteBlock(blockId, blockName) {
+            if (!blockId) { alert('Error: Block ID missing.'); return; }
+            const confirmDelete = confirm(`Are you sure you want to delete the entire block "${blockName}"?\n\nThis will delete ALL rooms and ALL students in this block. This action cannot be undone.`);
+            if (!confirmDelete) return;
+            try {
+                const res = await fetch(`http://localhost:5000/api/blocks/${blockId}`, { method: 'DELETE' }); const data = await res.json(); if (!res.ok) throw new Error(data.message);
+                alert('✅ Block deleted successfully!'); await loadHostelData(); 
+            } catch (error) { console.error('❌ Failed to delete block:', error); alert('❌ Failed to delete block: ' + error.message); }
+        }
+
+        // --- Delete Room Function --- (Unchanged)
+        async function handleDeleteRoom() {
+            if (!currentRoomData || !currentRoomData._id) { alert('Error: No room selected or room ID missing.'); return; }
+            const confirmDelete = confirm(`Are you sure you want to delete Room ${currentRoomData.roomNumber}? This will also remove all students in this room!`); if (!confirmDelete) return;
+            try {
+                const res = await fetch(`http://localhost:5000/api/rooms/${currentRoomData._id}`, { method: 'DELETE' }); const data = await res.json(); if (!res.ok) throw new Error(data.message);
+                alert('✅ Room and associated students deleted successfully!'); hideModal('room-details-modal'); await loadHostelData(); 
+            } catch (error) { console.error('❌ Failed to delete room:', error); alert('❌ Failed to delete room: ' + error.message); } finally { currentRoomData = null; }
+        }
+
+        // --- Remove Student Function --- (Unchanged)
+        async function handleRemoveStudent(studentId) {
+            if (!studentId) { alert('Error: Student ID missing.'); return; } if (!currentRoomData || !currentRoomData._id) { alert('Error: Current room data is missing.'); return; }
+            let studentToRemove = currentRoomData.students.find(s => s._id === studentId); let studentName = studentToRemove ? studentToRemove.name : 'this student'; 
+             if (!studentToRemove) { console.log("Student not found, refreshing..."); await loadHostelData(); const currentBlockKey = detailView.dataset.currentHostelKey; const updatedBlock = appState.blocks.find(b => b.blockKey === currentBlockKey); const updatedRoom = updatedBlock?.rooms.find(r => r._id === currentRoomData._id); studentToRemove = updatedRoom?.students.find(s => s._id === studentId); if (!studentToRemove){ alert('Error: Student not found after refresh.'); return; } studentName = studentToRemove.name; }
+            const confirmRemove = confirm(`Are you sure you want to remove ${studentName} from this room? Their record will be deleted.`); if (!confirmRemove) return;
+            try {
+                const res = await fetch(`http://localhost:5000/api/students/${studentId}`, { method: 'DELETE' }); const data = await res.json(); if (!res.ok) throw new Error(data.message);
+                alert('✅ Student removed successfully!'); 
+                await loadHostelData(); 
+                
+                const currentBlockKey = detailView.dataset.currentHostelKey; 
+                const updatedBlock = appState.blocks.find(b => b.blockKey === currentBlockKey);
+                
+                if(updatedBlock && updatedBlock.rooms){ 
+                    const updatedRoom = updatedBlock.rooms.find(r => r._id === currentRoomData._id); 
+                    if(updatedRoom){ 
+                        currentRoomData = updatedRoom; 
+                        renderRoomDetailsModal(updatedRoom, updatedBlock); 
+                    } else { 
+                        console.log("Room deleted, closing modal."); 
+                        hideModal('room-details-modal'); 
+                    }
+                } else { 
+                    console.log("Block deleted, closing modal."); 
+                    hideModal('room-details-modal'); 
+                }
+            } catch (error) { console.error('❌ Failed to remove student:', error); alert('❌ Failed to remove student: ' + error.message); }
+        } 
+
+        // --- Delete Club Activity Function (Async) --- (Unchanged)
+        async function handleDeleteClubActivity(activityId, activityTitle) {
+            if (!activityId) { 
+                alert('Error: Activity ID missing.'); 
+                return; 
+            }
+            
+            const confirmDelete = confirm(`Are you sure you want to delete the activity "${activityTitle}"?`);
+            if (!confirmDelete) return;
+
+            try {
+                const res = await fetch(`http://localhost:5000/api/activities/${activityId}`, { 
+                    method: 'DELETE' 
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message);
+
+                alert('✅ Activity deleted successfully!');
+                await loadClubActivities(); 
+            
+            } catch (error) {
+                console.error('❌ Failed to delete activity:', error);
+                alert('❌ Failed to delete activity: ' + error.message);
+            }
+        } 
+
+
+        // --- FORM SUBMISSIONS --- (Unchanged)
+        showAddBlockModalBtn.addEventListener('click', () => showModal('add-block-modal'));
+        addBlockForm.addEventListener('submit', async (e) => { e.preventDefault(); const blockName = document.getElementById('block-name').value; const uniqueKey = document.getElementById('block-key').value; const themeColor = document.getElementById('block-theme').value; try { const res = await fetch("http://localhost:5000/api/blocks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ blockName, uniqueKey, themeColor }), }); const data = await res.json(); if (!res.ok) throw new Error(data.message); alert("✅ " + data.message); addBlockForm.reset(); hideModal('add-block-modal'); await loadHostelData(); } catch (err) { alert("❌ Failed: " + err.message); } });
+        
+        showAddRoomModalBtn.addEventListener('click', () => showModal('add-room-modal'));
+        addRoomForm.addEventListener('submit', async (e) => { e.preventDefault(); const roomNumber = document.getElementById('room-id').value; const floor = document.getElementById('room-floor').value; const capacity = document.getElementById('room-capacity').value; const blockKey = detailView.dataset.currentHostelKey; try { const res = await fetch('http://localhost:5000/api/rooms', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ roomNumber, floor, capacity, blockKey }) }); const data = await res.json(); if (!res.ok) throw new Error(data.message); alert('✅ Room added successfully!'); addRoomForm.reset(); hideModal('add-room-modal'); await loadHostelData(); } catch (error) { alert('❌ Failed to add room: ' + error.message); } });
+        
+        showAddStudentModalBtn.addEventListener('click', () => { showModal('add-student-modal'); });
+        addStudentForm.addEventListener('submit', async (e) => { e.preventDefault(); const blockKey = detailView.dataset.currentHostelKey; const studentData = { roomId: document.getElementById('student-room-id').value, username: document.getElementById('student-username').value, password: document.getElementById('student-password').value, joiningDate: document.getElementById('student-joining-date').value || new Date().toISOString().split('T')[0], feeStatus: document.getElementById('student-fee-status').value, paymentMethod: document.getElementById('student-payment-method').value, name: document.getElementById('student-name').value, course: document.getElementById('student-course').value, department: document.getElementById('student-department').value, year: document.getElementById('student-year').value, email: document.getElementById('student-email').value, phone: document.getElementById('student-phone').value, }; if (!studentData.roomId) { alert('Please select an available room.'); return; } try { const res = await fetch('http://localhost:5000/api/students', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(studentData) }); const data = await res.json(); if (!res.ok) throw new Error(data.message); alert('✅ Student added successfully!'); addStudentForm.reset(); hideModal('add-student-modal'); await loadHostelData(); } catch (error) { console.error('❌ Failed to add student:', error); alert('❌ Failed to add student: ' + error.message); } });
+        
+        showAddEventModalBtn.addEventListener('click', () => showModal('add-event-modal'));
+        addEventForm.addEventListener('submit', (e) => { e.preventDefault(); const newEvent = { id: Date.now(), title: document.getElementById('event-title').value, type: document.getElementById('event-type').value, date: document.getElementById('event-date').value, description: document.getElementById('event-description').value, }; eventData.push(newEvent); renderEvents(); hideModal('add-event-modal'); addEventForm.reset(); });
+
+        // --- Add Club Activity Form Submission (Async + FormData) --- (Unchanged)
+        showAddClubActivityModalBtn.addEventListener('click', () => showModal('add-club-activity-modal'));
+        addClubActivityForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('club-activity-image-file');
+            const formData = new FormData();
+            formData.append('title', document.getElementById('club-activity-title').value);
+            formData.append('type', document.getElementById('club-activity-type').value);
+            formData.append('date', document.getElementById('club-activity-date').value);
+            formData.append('description', document.getElementById('club-activity-description').value);
+            if (fileInput.files && fileInput.files[0]) {
+                formData.append('image', fileInput.files[0]);
+            }
+            try {
+                const res = await fetch('http://localhost:5000/api/activities', {
+                    method: 'POST',
+                    body: formData,
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message);
+                alert('✅ Activity posted successfully!');
+                hideModal('add-club-activity-modal');
+                addClubActivityForm.reset();
+                await loadClubActivities(); 
+            } catch (error) {
+                console.error('❌ Failed to add activity:', error);
+                alert('❌ Failed to add activity: ' + error.message);
+            }
+        });
+        
+        // --- 6. INITIAL RENDER --- (Unchanged)
+        loadHostelData(); 
+        renderEvents();    
+        loadClubActivities(); 
+    });
+    </script>
+</body>
+</html>

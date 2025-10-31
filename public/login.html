@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IIT Hostel Management - Login</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles@2/tsparticles.bundle.min.js"></script>
+    
+    <script type="module" src="https://unpkg.com/heroicons@2.1.1/dist/solid/index.js"></script>
+    
+    <style>
+        /* Set the new font for the whole page */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        /* This positions the particle canvas behind all content */
+        #tsparticles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -10; /* Ensures it's in the background */
+        }
+    </style>
+</head>
+<body class="bg-blue-50 text-gray-900">
+
+    <div id="tsparticles"></div>
+
+    <div class="min-h-screen flex flex-col items-center justify-center p-4">
+        
+        <div class="w-full max-w-md">
+            
+            <div class="text-center mb-6">
+                <hero-icon-solid name="academic-cap" class="h-12 w-12 text-blue-600 mx-auto"></hero-icon-solid>
+                <h1 class="text-2xl font-bold text-gray-800 mt-3">Hostel Management Portal</h1>
+                <p class="text-sm text-gray-500">Indian Institute of Technology</p>
+            </div>
+
+            <div class="bg-white p-8 rounded-lg shadow-xl border-t-4 border-blue-600">
+                
+                <div class="space-y-5">
+                    
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                        <input type="text" id="username" placeholder="Enter your username"
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                    </div>
+                    
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                        <input type="password" id="password" placeholder="Enter your password"
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                    </div>
+                    
+                    <div>
+                        <label for="role" class="block text-sm font-medium text-gray-700">Login As</label>
+                        <select id="role"
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="admin">Admin</option>
+                            <option value="student">Student</option>
+                        </select>
+                    </div>
+                    
+                    <p id="msg" class="text-sm text-red-600 font-medium h-4"></p> 
+
+                    <button onclick="login()" 
+                            class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                        Login
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            tsParticles.load("tsparticles", {
+                background: {
+                    color: {
+                        value: "#eff6ff" // Matches body bg-blue-50
+                    }
+                },
+                fpsLimit: 60,
+                interactivity: {
+                    events: {
+                        onHover: {
+                            enable: true,
+                            mode: "repulse"
+                        },
+                        resize: true
+                    },
+                    modes: {
+                        repulse: {
+                            distance: 100, // Gentler repulse distance
+                            duration: 0.4
+                        }
+                    }
+                },
+                particles: {
+                    color: {
+                        value: "#60a5fa" // Subtle blue-400 color
+                    },
+                    links: {
+                        color: "#93c5fd", // Subtle blue-300 color
+                        distance: 150,
+                        enable: true,
+                        opacity: 0.3, // Very faint links
+                        width: 1
+                    },
+                    collisions: {
+                        enable: true
+                    },
+                    move: {
+                        direction: "none",
+                        enable: true,
+                        outModes: {
+                            default: "bounce"
+                        },
+                        random: false,
+                        speed: 1, // Very slow speed
+                        straight: false
+                    },
+                    number: {
+                        density: {
+                            enable: true,
+                            area: 800
+                        },
+                        value: 60 // Fewer particles
+                    },
+                    opacity: {
+                        value: 0.3 // Very faint particles
+                    },
+                    shape: {
+                        type: "circle"
+                    },
+                    size: {
+                        value: { min: 1, max: 3 },
+                    }
+                },
+                detectRetina: true
+            });
+        });
+    </script>
+
+    <script>
+        async function login() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const role = document.getElementById("role").value;
+            const msgEl = document.getElementById("msg"); // Get msg element
+
+            // Clear previous message
+            msgEl.innerText = ""; 
+
+            try {
+                const res = await fetch("/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password, role }),
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    // <<< YOUR ORIGINAL LOGIC >>>
+                    if (data.studentId) {
+                        localStorage.setItem('currentStudentId', data.studentId);
+                    } else {
+                        localStorage.removeItem('currentStudentId');
+                    }
+                    
+                    // Show success message before redirecting
+                    msgEl.style.color = "green";
+                    msgEl.innerText = "Login successful! Redirecting...";
+                    
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 1000); // Small delay so user sees the message
+
+                } else {
+                    // <<< YOUR ORIGINAL LOGIC >>>
+                    msgEl.style.color = "red";
+                    msgEl.innerText = data.message;
+                }
+            } catch (error) {
+                // Added for robustness (e.g., network error)
+                console.error("Login error:", error);
+                msgEl.style.color = "red";
+                msgEl.innerText = "An error occurred. Please try again.";
+            }
+        }
+    </script>
+</body>
+</html>

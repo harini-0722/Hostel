@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IIT Hostel Management - Student Portal</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // --- IIT Executive Palette ---
+                        'primary-blue': '#2563EB',     // Main brand color (Blue 600)
+                        'secondary-accent': '#F9C74F',  // Vibrant Yellow/Gold
+                        
+                        'accent-dark': '#1F2937',      // Deep Charcoal/Navy for Headers/Strong Text
+                        
+                        'accent-green': '#059669',     // Success/Paid/Present (Emerald 600)
+                        'accent-red': '#DC2626',       // Danger/Due/Critical (Red 600)
+                        'info-yellow': '#FBBF24',      // Warning (Amber 500)
+                        
+                        'complaint-theme': '#EA580C',   
+                        
+                        // Structure
+                        'secondary-gray': '#6B7280',   // Muted Text/Subtitles
+                        'light-bg': '#F9FAFB',         // Very Light Gray (Internal distinctions like table headers)
+                        'card-bg': '#FFFFFF',          // PURE WHITE for all main content boxes/cards
+                        'text-muted': '#E5E7EB',       // Light divider/border
+                        
+                        /* === UPDATED: MILD BLUE THEME === */
+                        'page-bg': '#eff6ff'           // MILD BLUE (was '#0A1F38')
+                    },
+                    boxShadow: {
+                        'soft': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.02)',
+                        'lift': '0 5px 15px -3px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
+                        'deep': '0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 3px 5px -2px rgba(0, 0, 0, 0.08)',
+                    },
+                    transitionTimingFunction: {
+                        'sophisticated': 'cubic-bezier(0.25, 0.8, 0.25, 1)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* CORE FIX: Full-Height Flexbox Layout */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+        body {
+            /* === UPDATED: Mild Blue BG is now default === */
+            background-color: theme('colors.page-bg'); 
+            display: flex; 
+            flex-direction: column;
+            overflow: hidden; 
+        }
+        
+        /* REMOVED: Particle canvas styling */
+        
+        /* Navbar is the fixed bar now */
+        .navbar {
+            flex-shrink: 0;
+            z-index: 50; 
+            position: sticky;
+            top: 0;
+            background-color: theme('colors.card-bg'); /* White Header */
+        }
+        .fixed-bar {
+             background-color: theme('colors.card-bg'); /* White Footer */
+        }
+
+        /* Main Wrapper is the Scrollable Area */
+        .main-wrapper {
+            flex-grow: 1;
+            overflow-y: auto; 
+            position: relative; 
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Content Padding applied to all views */
+        .content-padding {
+            padding: 1.5rem; 
+            min-height: 100%; 
+        }
+        @media (min-width: 640px) {
+            .content-padding {
+                padding: 3rem; 
+            }
+        }
+        
+        /* View Transitions */
+        .view {
+            transition: opacity 0.6s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transform: translateX(0);
+            opacity: 1;
+            min-height: 100%; 
+        }
+        .view.hidden {
+            opacity: 0;
+            transform: translateX(30px);
+            pointer-events: none; 
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+        
+        /* Active Navigation Link Style */
+        .nav-link.active {
+            color: theme('colors.primary-blue');
+            border-bottom: 2px solid theme('colors.primary-blue');
+            font-weight: 600;
+        }
+
+        /* Active Tab Style for Reports Page */
+        .report-tab {
+            @apply border-transparent text-secondary-gray hover:border-gray-300 hover:text-gray-700 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200;
+        }
+        .report-tab.active {
+            @apply border-primary-blue text-primary-blue; /* UPDATED: from women-theme */
+        }
+
+        /* Classy Lift & Hover Effects */
+        .btn-classy-lift { transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .btn-classy-lift:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(29, 78, 216, 0.3); }
+        .card-classy-lift { transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); transform: perspective(1000px); }
+        .card-classy-lift:hover { transform: translateY(-5px) rotateX(0.5deg) rotateY(0.5deg); box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15); }
+        
+        /* Gauge styles - Inner circle is explicitly PURE WHITE */
+        .gauge { position: relative; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1); }
+        .gauge-inner { position: absolute; width: 60px; height: 60px; background: theme('colors.card-bg'); /* Pure White */ border-radius: 50%; z-index: 1; }
+        .gauge-text { font-size: 0.9rem; font-weight: bold; color: theme('colors.secondary-gray'); z-index: 10; }
+
+        /* === NEW: Announcement Modal Styles === */
+        #announcement-modal { z-index: 100; }
+        #announcement-modal .modal-card { max-height: 90vh; }
+    </style>
+</head>
+
+<body class="bg-blue-50 text-gray-900">
+
+    <nav class="navbar shadow-lg border-b border-primary-blue/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                
+                <div class="flex items-center">
+                    <a href="#" onclick="showView('student-dashboard-view')" class="flex-shrink-0 text-xl md:text-2xl font-bold text-primary-blue hover:text-blue-700 transition duration-300">
+                        IIT COLLEGE <span class="hidden sm:inline text-xs md:text-sm font-normal text-secondary-gray ml-1">| Student Portal</span>
+                    </a>
+                </div>
+
+                <div class="hidden sm:flex sm:flex-1 sm:justify-center">
+                    <div class="flex space-x-4 lg:space-x-6">
+                        <a href="#" onclick="showView('student-dashboard-view')" id="nav-student-dashboard-view" class="nav-link inline-flex items-center px-1 pt-1 text-sm font-medium text-secondary-gray hover:text-primary-blue transition duration-200 active">
+                            <span class="mr-1">🏠</span> Dashboard
+                        </a>
+                        <a href="#" onclick="showStudentDetails()" id="nav-student-profile-view" class="nav-link inline-flex items-center px-1 pt-1 text-sm font-medium text-secondary-gray hover:text-primary-blue transition duration-200">
+                            <span class="mr-1">🧑</span> My Profile
+                        </a>
+                        <a href="#" onclick="showView('student-room-view')" id="nav-student-room-view" class="nav-link inline-flex items-center px-1 pt-1 text-sm font-medium text-secondary-gray hover:text-primary-blue transition duration-200">
+                            <span class="mr-1">🛏</span> My Room
+                        </a>
+                        <a href="#" onclick="showView('student-attendance-view')" id="nav-student-attendance-view" class="nav-link inline-flex items-center px-1 pt-1 text-sm font-medium text-secondary-gray hover:text-primary-blue transition duration-200">
+                            <span class="mr-1">✅</span> Attendance
+                        </a>
+                        <a href="#" onclick="showView('student-reports-view')" id="nav-student-reports-view" class="nav-link inline-flex items-center px-1 pt-1 text-sm font-medium text-secondary-gray hover:text-primary-blue transition duration-200">
+                            <span class="mr-1">⚠️</span> Reports & Issues
+                        </a>
+                        <a href="#" onclick="showView('student-leave-view')" id="nav-student-leave-view" class="nav-link inline-flex items-center px-1 pt-1 text-sm font-medium text-secondary-gray hover:text-primary-blue transition duration-200">
+                            <span class="mr-1">🗓</span> Leave Request
+                        </a>
+                        <a href="#" onclick="logout()" class="nav-link inline-flex items-center px-1 pt-1 text-sm font-medium text-secondary-gray hover:text-accent-red transition duration-200">
+                            <span class="mr-1">🚪</span> Logout
+                        </a>
+                    </div>
+                </div>
+
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                         <div id="student-initial-box" onclick="showStudentDetails()" class="h-8 w-8 md:h-10 md:w-10 bg-primary-blue rounded-full flex items-center justify-center text-card-bg font-semibold shadow-soft cursor-pointer">...</div>
+                    </div>
+                    <button type="button" id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-primary-blue hover:text-primary-blue/80 hover:bg-light-bg focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-blue sm:hidden ml-2" aria-controls="mobile-menu" aria-expanded="false">
+                        <svg class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="sm:hidden hidden" id="mobile-menu">
+            <div class="pt-2 pb-3 space-y-1">
+                <a href="#" onclick="showView('student-dashboard-view'); hideMobileMenu();" id="mobile-nav-student-dashboard-view" class="nav-link block pl-3 pr-4 py-2 border-l-4 border-primary-blue text-base font-medium text-primary-blue bg-light-bg"><span class="mr-2">🏠</span> Dashboard</a>
+                <a href="#" onclick="showStudentDetails(); hideMobileMenu();" id="mobile-nav-student-profile-view" class="nav-link block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-light-bg hover:text-gray-800"><span class="mr-2">🧑</span> My Profile</a>
+                <a href="#" onclick="showView('student-room-view'); hideMobileMenu();" id="mobile-nav-student-room-view" class="nav-link block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-light-bg hover:text-gray-800"><span class="mr-2">🛏</span> My Room</a>
+                <a href="#" onclick="showView('student-attendance-view'); hideMobileMenu();" id="mobile-nav-student-attendance-view" class="nav-link block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-light-bg hover:text-gray-800"><span class="mr-2">✅</span> Attendance</a>
+                <a href="#" onclick="showView('student-reports-view'); hideMobileMenu();" id="mobile-nav-student-reports-view" class="nav-link block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-light-bg hover:text-gray-800"><span class="mr-2">⚠️</span> Reports & Issues</a>
+                <a href="#" onclick="showView('student-leave-view'); hideMobileMenu();" id="mobile-nav-student-leave-view" class="nav-link block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-light-bg hover:text-gray-800"><span class="mr-2">🗓</span> Leave Request</a>
+                <a href="#" onclick="logout(); hideMobileMenu();" class="nav-link block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-light-bg hover:text-accent-red"><span class="mr-2">🚪</span> Logout</a>
+            </div>
+        </div>
+    </nav>
+
+
+    <div class="main-wrapper">
+        <div class="content-padding">
+
+            <div id="student-dashboard-view" class="view">
+                <h1 id="welcome-heading" class="text-3xl md:text-4xl font-extrabold text-accent-dark mb-2 mt-2 md:mt-4"> Welcome...</h1>
+                <p class="text-base md:text-lg text-secondary-gray mb-8 md:mb-10">Your personalized hostel status and services overview.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 mb-10 md:mb-16">
+                    
+                    <div onclick="showView('student-room-view')" class="bg-card-bg p-6 rounded-xl shadow-lift border-t-4 border-primary-blue card-classy-lift cursor-pointer">
+                        <p class="text-xs font-semibold text-primary-blue uppercase mb-3">Your Room</p>
+                        <p class="text-4xl md:text-5xl font-extrabold text-accent-dark mb-1">...</p>
+                        <p class="text-sm text-secondary-gray">...</p>
+                        <div class="mt-4 flex items-center text-accent-dark font-semibold">
+                            <span class="text-xs text-accent-green mr-2">●</span> You are currently checked in.
+                        </div>
+                    </div>
+
+                    <div onclick="showStudentDetails()" class="bg-card-bg p-6 rounded-xl shadow-lift border-t-4 border-accent-red card-classy-lift cursor-pointer">
+                        <p class="text-xs font-semibold text-accent-red uppercase mb-3">Fee Status</p>
+                        <p id="dashboard-fee-status" class="text-4xl md:text-5xl font-extrabold text-accent-red mb-1">...</p>
+                        <p class="text-sm text-secondary-gray">...</p>
+                        <div class="mt-4 flex items-center text-accent-red font-semibold">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                            <span>...</span>
+                        </div>
+                    </div>
+
+                    <div onclick="showView('student-reports-view')" class="bg-card-bg p-6 rounded-xl shadow-lift border-t-4 border-complaint-theme card-classy-lift cursor-pointer">
+                        <p class="text-xs font-semibold text-complaint-theme uppercase mb-3">Open Requests</p>
+                        <p id="dashboard-open-requests" class="text-4xl md:text-5xl font-extrabold text-accent-dark mb-1">...</p>
+                        <p class="text-sm text-secondary-gray">...</p>
+                        <div class="mt-4 flex items-center text-complaint-theme font-semibold">
+                            <span class="text-xs text-complaint-theme mr-2">●</span> Priority: Critical
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-6 md:my-10 border-t border-text-muted/20"/> <h2 class="text-2xl md:text-3xl font-bold text-accent-dark mb-6">Quick Actions</h2>
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                    <button onclick="showView('student-reports-view')" class="btn-classy-lift bg-primary-blue text-card-bg text-sm font-semibold px-5 py-3 rounded-lg shadow-lift hover:bg-blue-700 transition duration-300">
+                        File a Report or Issue
+                    </button>
+                    <button onclick="showView('student-leave-view')" class="btn-classy-lift bg-primary-blue text-card-bg text-sm font-semibold px-5 py-3 rounded-lg shadow-lift hover:bg-blue-700 transition duration-300">
+                        Apply for Leave
+                    </button>
+                    <button onclick="showStudentDetails()" class="btn-classy-lift bg-primary-blue text-card-bg text-sm font-semibold px-5 py-3 rounded-lg shadow-lift hover:bg-blue-700 transition duration-300">
+                        View Profile & Fees
+                    </button>
+                    <button onclick="openAnnouncementsModal()" class="btn-classy-lift bg-primary-blue text-card-bg text-sm font-semibold px-5 py-3 rounded-lg shadow-lift hover:bg-blue-700 transition duration-300">
+                        Hostel Announcements
+                    </button>
+                </div>
+            </div>
+
+            <div id="student-room-view" class="view hidden">
+                <h1 class="text-3xl md:text-4xl font-extrabold text-accent-dark mb-6 md:mb-8">My Room & Mates 🛏️</h1>
+                <p class="text-secondary-gray mb-8">Details about your current accommodation and fellow occupants.</p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                    <div class="lg:col-span-1 bg-card-bg p-6 rounded-xl shadow-lift border-t-4 border-primary-blue">
+                        <h3 class="text-xl font-bold text-accent-dark mb-4">Room ... Summary</h3>
+                        <div class="space-y-3 text-sm">
+                            <p class="text-secondary-gray flex justify-between">Hostel: <span class="font-semibold text-accent-dark">...</span></p>
+                            <p class="text-secondary-gray flex justify-between">Floor: <span class="font-semibold text-accent-dark">...</span></p>
+                            <p class="text-secondary-gray flex justify-between">Capacity: <span class="font-semibold text-accent-dark">...</span></p>
+                            <p class="text-secondary-gray flex justify-between">Occupancy: <span class="font-bold text-accent-green">...</span></p>
+                        </div>
+                        <div class="mt-6 pt-4 border-t border-text-muted">
+                            <p class="text-secondary-gray text-xs">If any issues, please check the Reports tab.</p>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-2 bg-card-bg p-6 rounded-xl shadow-lift border-t-4 border-primary-blue">
+                        <h3 class="text-xl font-bold text-accent-dark mb-5">Current Roommates (...)</h3>
+                        <div id="roommates-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="student-attendance-view" class="view hidden">
+                <h1 class="text-3xl md:text-4xl font-extrabold text-accent-dark mb-6 md:mb-8"> My Attendance ✅</h1>
+                <p class="text-secondary-gray mb-8">Manage your daily hostel check-in and check-out status.</p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                    <div id="attendance-status-card" class="lg:col-span-1 bg-card-bg p-6 rounded-xl shadow-lift border-t-4 border-accent-green">
+                        <h3 class="text-xl font-bold text-accent-dark mb-4">Current Status</h3>
+                        <div class="text-center py-6">
+                            <p class="text-3xl font-extrabold text-accent-green mb-2" id="attendance-status-text">Checked In</p>
+                            <p class="text-sm text-secondary-gray" id="attendance-status-time">Since: 24 Oct 2025, 08:00 AM</p>
+                        </div>
+                        <button id="attendance-toggle-btn" class="btn-classy-lift bg-accent-red text-card-bg w-full py-3 rounded-lg shadow-lift hover:bg-red-700 font-semibold">
+                            Check Out
+                        </button>
+                    </div>
+
+                    <div class="lg:col-span-2 bg-card-bg p-6 rounded-xl shadow-lift border-t-4 border-primary-blue">
+                        <h3 class="text-xl font-bold text-accent-dark mb-5">Attendance Log (Last 7 Days)</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-text-muted">
+                                <thead class="bg-light-bg">
+                                    <tr>
+                                        <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">Date</th>
+                                        <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">Check-In</th>
+                                        <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">Check-Out</th>
+                                        <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="attendance-log-body" class="bg-card-bg divide-y divide-text-muted">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="student-visitor-view" class="view hidden">
+                <h1 class="text-3xl md:text-4xl font-extrabold text-accent-dark mb-6 md:mb-8">Visitor Management 👤</h1>
+                <p class="text-secondary-gray mb-8">Register guest visitors and manage guest stay payments.</p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                    <div class="lg:col-span-1 bg-card-bg p-6 rounded-xl shadow-lift border-l-4 border-primary-blue">
+                        <h3 class="text-xl font-bold text-primary-blue mb-4">Register New Visitor</h3>
+                        <form id="visitor-form" onsubmit="event.preventDefault(); handleVisitorFormSubmit();" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-secondary-gray mb-1">Visitor's Full Name</label>
+                                <input type="text" id="visitor-name" placeholder="e.g., Mrs. Sharma" class="w-full p-3 border border-text-muted rounded-lg focus:ring-primary-blue focus:border-primary-blue bg-light-bg" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-secondary-gray mb-1">Check-In Date</label>
+                                <input type="date" id="visitor-start-date" class="w-full p-3 border border-text-muted rounded-lg focus:ring-primary-blue focus:border-primary-blue bg-light-bg" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-secondary-gray mb-1">Check-Out Date</label>
+                                <input type="date" id="visitor-end-date" class="w-full p-3 border border-text-muted rounded-lg focus:ring-primary-blue focus:border-primary-blue bg-light-bg" required>
+                            </div>
+                            <button type="submit" class="btn-classy-lift bg-primary-blue text-card-bg w-full py-3 rounded-lg shadow-lift hover:bg-blue-700">
+                                Calculate Stay & Fee
+                            </button>
+                        </form>
+
+                        <div id="visitor-summary-box" class="hidden mt-6 pt-4 border-t border-text-muted">
+                            <h4 class="text-lg font-semibold text-accent-dark mb-3">Visit Summary</h4>
+                            <div class="space-y-2 text-sm">
+                                <p class="text-secondary-gray flex justify-between">Calculated Stay: <strong id="visitor-stay-duration" class="text-primary-blue text-base">...</strong></p>
+                                <p class="text-secondary-gray flex justify-between">Guest Fee: <strong class="text-accent-dark text-base">₹100 / night</strong></p>
+                                <p class="text-secondary-gray flex justify-between text-base">Total Fee: <strong id="visitor-total-fee" class="text-accent-red text-lg">...</strong></p>
+                            </div>
+                            <button type="button" id="raise-ticket-btn" class="btn-classy-lift bg-primary-blue text-card-bg w-full py-3 rounded-lg shadow-lift hover:bg-blue-700 font-semibold mt-5">
+                                Raise Payment Ticket
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-2 bg-card-bg p-6 rounded-xl shadow-lift border-t-4 border-primary-blue">
+                        <h3 class="text-xl font-bold text-accent-dark mb-5">Visitor History</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-text-muted">
+                                <thead class="bg-light-bg">
+                                    <tr>
+                                        <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">Visitor</th>
+                                        <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">Stay</th>
+                                        <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">Fee</th>
+                                        <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">Payment Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="visitor-history-body" class="bg-card-bg divide-y divide-text-muted">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="student-reports-view" class="view hidden">
+                <h1 class="text-3xl md:text-4xl font-extrabold text-accent-dark mb-6 md:mb-8">Reports & Issues ⚠️</h1>
+                
+                <div class="mb-6 md:mb-8">
+                    <div class="bg-card-bg rounded-lg shadow-soft px-4 sm:px-6">
+                        <div class="border-b border-text-muted">
+                            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                                <a href="#" id="tab-complaints" onclick="showReportTab('complaints')" class="report-tab active">
+                                    Complaints
+                                </a>
+                                <a href="#" id="tab-feedback" onclick="showReportTab('feedback')" class="report-tab">
+                                    Feedback
+                                </a>
+                                <a href="#" id="tab-lost-found" onclick="showReportTab('lost-found')" class="report-tab">
+                                    Lost & Found
+                                </a>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="report-tab-content-complaints" class="report-tab-content">
+                    <p class="text-secondary-gray mb-8">Submit new maintenance or hostel issues and track your existing requests.</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                        <div class="lg:col-span-1 bg-card-bg p-6 rounded-xl shadow-lift border-l-4 border-complaint-theme">
+                            <h3 class="text-xl font-bold text-complaint-theme mb-4">Submit New Complaint</h3>
+                            <form onsubmit="event.preventDefault(); submitComplaint();" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-secondary-gray mb-1">Issue Location</label>
+                                    <select id="complaint-location" class="w-full p-3 border border-text-muted rounded-lg focus:ring-primary-blue focus:border-primary-blue bg-light-bg">
+                                        <option>My Room</option>
+                                        <option>Floor Washroom</option>
+                                        <option>Hostel Common Area</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-secondary-gray mb-1">Issue Type</label>
+                                    <select id="complaint-type" class="w-full p-3 border border-text-muted rounded-lg focus:ring-primary-blue focus:border-primary-blue bg-light-bg">
+                                        <option>Plumbing/Water Leakage</option>
+                                        <option>Electrical/Light/Fan failure</option>
+                                        <option>Noise Complaint</option>
+                                        <option>Pest Control</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-secondary-gray mb-1">Description</label>
+                                    <textarea id="complaint-description" rows="3" class="w-full p-3 border border-text-muted rounded-lg focus:ring-primary-blue focus:border-primary-blue bg-light-bg"></textarea>
+                                </div>
+                                <button type="submit" class="btn-classy-lift bg-complaint-theme text-card-bg w-full py-3 rounded-lg shadow-lift hover:bg-orange-700">
+                                    Send Request
+                                </button>
+                            </form>
+                        </div>
+                        <div class="lg:col-span-2">
+                            <h3 class="text-xl font-bold text-accent-dark mb-5">My Complaint History</h3>
+                            <div class="bg-card-bg rounded-xl shadow-lift overflow-x-auto">
+                                 <table class="min-w-full divide-y divide-text-muted">
+                                    <thead class="bg-light-bg">
+                                        <tr>
+                                            <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">ID</th>
+                                            <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">Date</th>
+                                            <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">Issue</th>
+                                            <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">Status</th>
+                                            <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">Priority</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="student-complaint-history" class="bg-card-bg divide-y divide-text-muted">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="report-tab-content-feedback" class="report-tab-content hidden">
+                    <p class="text-secondary-gray mb-8">Provide anonymous or named feedback about hostel services.</p>
+                    <div class="max-w-2xl mx-auto">
+                        <div class="bg-card-bg p-6 rounded-xl shadow-lift border-l-4 border-info-yellow">
+                            <h3 class="text-xl font-bold text-info-yellow mb-4">Submit Feedback</h3>
+                            <form onsubmit="event.preventDefault(); alert('Feedback submitted successfully!');" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-secondary-gray mb-1">Feedback Category</label>
+                                    <select id="feedback-category" class="w-full p-3 border border-text-muted rounded-lg focus:ring-primary-blue focus:border-primary-blue bg-light-bg">
+                                        <option>Mess & Food Quality</option>
+                                        <option>Staff & Warden Behavior</option>
+                                        <option>Hostel Facilities</option>
+                                        <option>Events & Activities</option>
+                                        <option>Other Suggestions</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-secondary-gray mb-1">Your Feedback</label>
+                                    <textarea id="feedback-description" rows="4" placeholder="Share your suggestions or concerns..." class="w-full p-3 border border-text-muted rounded-lg focus:ring-primary-blue focus:border-primary-blue bg-light-bg"></textarea>
+                                </div>
+                                <div class="flex items-center">
+                                    <input id="feedback-anonymous" type="checkbox" class="h-4 w-4 text-primary-blue border-gray-300 rounded focus:ring-primary-blue">
+                                    <label for="feedback-anonymous" class="ml-2 block text-sm text-secondary-gray">Submit anonymously</label>
+                                </div>
+                                <button type="submit" class="btn-classy-lift bg-info-yellow text-accent-dark w-full py-3 rounded-lg shadow-lift hover:bg-amber-400 font-semibold">
+                                    Submit Feedback
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="report-tab-content-lost-found" class="report-tab-content hidden">
+                    <p class="text-secondary-gray mb-8">Report items you've lost or view items found by others.</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                        <div class="lg:col-span-1 bg-card-bg p-6 rounded-xl shadow-lift border-l-4 border-accent-red">
+                            <h3 class="text-xl font-bold text-accent-red mb-4">Report a Lost Item</h3>
+                            <form onsubmit="event.preventDefault(); alert('Lost item report submitted.');" class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-secondary-gray mb-1">What did you lose?</label>
+                                    <input type="text" id="lost-item-name" placeholder="e.g., Blue Umbrella" class="w-full p-3 border border-text-muted rounded-lg focus:ring-primary-blue focus:border-primary-blue bg-light-bg" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-secondary-gray mb-1">Where did you last see it?</label>
+                                    <input type="text" id="lost-item-location" placeholder="e.g., Hostel Lobby" class="w-full p-3 border border-text-muted rounded-lg focus:ring-primary-blue focus:border-primary-blue bg-light-bg">
+                                </div>
+                                <button type="submit" class="btn-classy-lift bg-accent-red text-card-bg w-full py-3 rounded-lg shadow-lift hover:bg-red-700">
+                                    File Lost Report
+                                </button>
+                            </form>
+                        </div>
+                        <div class="lg:col-span-2">
+                             <h3 class="text-xl font-bold text-accent-dark mb-5">Recently Found Items</h3>
+                            <div class="bg-card-bg p-6 rounded-xl shadow-lift">
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-text-muted">
+                                        <thead class="bg-light-bg">
+                                            <tr>
+                                                <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">Item</th>
+                                                <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">Date Found</th>
+                                                <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">Location</th>
+                                                <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="lost-found-body" class="bg-card-bg divide-y divide-text-muted">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="student-leave-view" class="view hidden">
+                <h1 class="text-3xl md:text-4xl font-extrabold text-accent-dark mb-6 md:mb-8">Leave Request 🗓️</h1>
+                <p class="text-secondary-gray mb-8">Submit requests for overnight or extended leave from the hostel.</p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                    <div class="lg:col-span-1 bg-card-bg p-6 rounded-xl shadow-lift border-l-4 border-info-yellow">
+                        <h3 class="text-xl font-bold text-info-yellow mb-4">New Leave Application</h3>
+                        <form onsubmit="event.preventDefault(); submitLeave();" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-secondary-gray mb-1">Departure Date</label>
+                                <input type="date" id="leave-start" class="w-full p-3 border border-text-muted rounded-lg focus:ring-primary-blue focus:border-primary-blue bg-light-bg"/>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-secondary-gray mb-1">Return Date</label>
+                                <input type="date" id="leave-end" class="w-full p-3 border border-text-muted rounded-lg focus:ring-primary-blue focus:border-primary-blue bg-light-bg"/>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-secondary-gray mb-1">Reason for Leave</label>
+                                <select id="leave-reason" class="w-full p-3 border border-text-muted rounded-lg focus:ring-primary-blue focus:border-primary-blue bg-light-bg">
+                                    <option>Family Emergency</option>
+                                    <option>Home Trip / Vacation</option>
+                                    <option>Academic / Conference Trip</option>
+                                    <option>Medical Appointment</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-classy-lift bg-info-yellow text-accent-dark w-full py-3 rounded-lg shadow-lift hover:bg-amber-400">
+                                Submit Leave Request
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="lg:col-span-2">
+                        <h3 class="text-xl font-bold text-accent-dark mb-5">Previous Leave Status</h3>
+                        <div class="bg-card-bg rounded-xl shadow-lift overflow-x-auto">
+                            <table class="min-w-full divide-y divide-text-muted">
+                                <thead class="bg-light-bg">
+                                    <tr>
+                                        <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">Start Date</th>
+                                        <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">End Date</th>
+                                        <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">Reason</th>
+                                        <th class="py-3 px-6 text-left text-xs font-medium text-secondary-gray uppercase tracking-wider">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="student-leave-history" class="bg-card-bg divide-y divide-text-muted">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+            
+            <div id="student-details-view" class="view hidden">
+                <button onclick="showView('student-dashboard-view')" class="btn-classy-lift flex items-center space-x-2 text-primary-blue hover:text-blue-700 font-semibold mb-6">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    <span>Back to Dashboard</span>
+                </button>
+
+                <div class="bg-white rounded-lg shadow-md p-6 md:p-8 mb-8">
+                    <div class="flex flex-col md:flex-row items-center gap-6">
+                        <div class="flex-shrink-0">
+                            <span id="profile-initials" class="flex items-center justify-center h-28 w-28 rounded-full bg-primary-blue text-white text-5xl font-bold">
+                                ..
+                            </span>
+                        </div>
+                        <div class="text-center md:text-left">
+                            <h1 class="text-4xl font-extrabold text-gray-900" id="profile-name">Loading...</h1>
+                            <div class="flex justify-center md:justify-start items-center gap-3 mt-3">
+                                <span id="profile-year" class="text-sm font-bold px-3 py-1 bg-primary-blue/10 text-primary-blue rounded-full"></span>
+                                <span id="profile-course" class="text-sm font-bold px-3 py-1 bg-blue-100 text-blue-700 rounded-full"></span>
+                            </div>
+                            <div class="flex justify-center md:justify-start items-center gap-2 mt-4 text-gray-600">
+                                <hero-icon-solid name="building-office" class="h-5 w-5 text-indigo-500"></hero-icon-solid>
+                                <span class="font-medium" id="profile-location">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-8">
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Contact Information</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="flex items-center gap-4">
+                                <span class="p-3 bg-blue-100 rounded-full"><hero-icon-solid name="envelope" class="h-6 w-6 text-blue-600"></hero-icon-solid></span>
+                                <div>
+                                    <p class="text-sm text-gray-500">Email</p>
+                                    <p class="text-base font-medium text-gray-900" id="profile-email">Loading...</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="p-3 bg-blue-100 rounded-full"><hero-icon-solid name="phone" class="h-6 w-6 text-blue-600"></hero-icon-solid></span>
+                                <div>
+                                    <p class="text-sm text-gray-500">Phone</p>
+                                    <p class="text-base font-medium text-gray-900" id="profile-phone">Loading...</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="p-3 bg-blue-100 rounded-full"><hero-icon-solid name="calendar-days" class="h-6 w-6 text-blue-600"></hero-icon-solid></span>
+                                <div>
+                                    <p class="text-sm text-gray-500">Join Date</p>
+                                    <p class="text-base font-medium text-gray-900" id="profile-join-date">Loading...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Fee Details</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <p class="text-sm text-gray-500 mb-1">Fee Status</p>
+                                <span id="profile-fee-status" class="text-lg font-bold px-4 py-1.5 rounded-full">Loading...</span>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 mb-1">Payment Method</p>
+                                <p class="text-lg font-medium text-gray-900" id="profile-payment-method">Loading...</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 mb-1">Next Due Date</p>
+                                <p class="text-lg font-medium text-gray-900">2026-05-01</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md">
+                        <h2 class="text-2xl font-bold text-gray-800 p-6 border-b">Attendance Log</h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full min-w-max">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="text-left text-sm font-semibold text-gray-600 p-4">Date</th>
+                                        <th class="text-left text-sm font-semibold text-gray-600 p-4">Check-in</th>
+                                        <th class="text-left text-sm font-semibold text-gray-600 p-4">Check-out</th>
+                                        <th class="text-left text-sm font-semibold text-gray-600 p-4">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y" id="profile-attendance-log-table">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Complaints Filed by Student</h2>
+                        <div class="space-y-4" id="profile-complaints-list">
+                            </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+    
+    <footer class="fixed-bar shadow-soft border-t-4 border-primary-blue/20 p-4 md:p-6 text-center text-sm text-secondary-gray">
+        <div class="container mx-auto">
+            <p>&copy; 2024 IIT Hostel Management Demo. All rights reserved.</p>
+            <p class="mt-1 text-xs text-primary-blue">Contact: warden@iit-hostel.edu</p>
+        </div>
+    </footer>
+
+
+    <div id="announcement-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4 transition-opacity duration-300">
+        <div class="modal-card bg-card-bg rounded-xl shadow-deep w-full max-w-2xl flex flex-col">
+            
+            <div id="announcement-list-view">
+                <div class="flex justify-between items-center p-5 border-b border-text-muted">
+                    <h3 class="text-xl font-bold text-primary-blue">Hostel Announcements</h3>
+                    <button onclick="closeAnnouncementsModal()" class="text-secondary-gray hover:text-accent-dark">&times;</button>
+                </div>
+                <div id="announcement-list-container" class="p-6 space-y-4 overflow-y-auto" style="max-height: 70vh;">
+                    </div>
+            </div>
+
+            <div id="announcement-detail-view" class="hidden">
+                <div class="flex justify-between items-center p-5 border-b border-text-muted">
+                    <button onclick="showAnnouncementsList()" class="text-primary-blue font-semibold hover:text-blue-700">
+                        &larr; Back to List
+                    </button>
+                    <button onclick="closeAnnouncementsModal()" class="text-secondary-gray hover:text-accent-dark">&times;</button>
+                </div>
+                <div class="p-6 overflow-y-auto" style="max-height: 70vh;">
+                    <h3 id="announcement-detail-title" class="text-2xl font-bold text-accent-dark mb-2"></h3>
+                    <p id="announcement-detail-date" class="text-sm text-secondary-gray mb-4"></p>
+                    <div id="announcement-detail-body" class="prose max-w-none text-accent-dark">
+                        </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+   <script>
+        // =========================================================================
+        // GLOBAL DATA STORE (Will be filled from API)
+        // =========================================================================
+        
+        let g_student = null;
+        let g_room = null;
+        let g_block = null;
+        let g_roommates = [];
+        let g_attendance = [];
+        let g_complaints = [];
+        
+        let g_attendanceStatus = { status: 'Checked Out', lastActionTime: null };
+        
+        // --- Mock data for features not yet built ---
+        const mockLeaveHistory = [
+            { id: 1, studentId: 1, start: '2025-09-01', end: '2025-09-05', reason: 'Home Trip', status: 'Approved' },
+            { id: 2, studentId: 1, start: '2025-11-20', end: '2025-11-25', reason: 'Family Emergency', status: 'Pending' }
+        ];
+        
+        const mockVisitorHistory = [
+            { id: 'V001', studentId: 1, name: 'Ravi Sharma (Father)', start: '2025-09-10', end: '2025-09-12', duration: 2, fee: 200, status: 'Paid' }
+        ];
+
+        const mockLostFound = [
+            { id: 'F001', item: 'Blue Umbrella', dateFound: '2025-10-20', location: 'Hostel Lobby', status: 'Available' },
+            { id: 'F002', item: 'Physics Textbook', dateFound: '2025-10-18', location: 'Common Room', status: 'Available' },
+        ];
+
+        const mockAnnouncements = [
+            {
+                id: 1,
+                date: '2025-10-24',
+                title: 'Mandatory Hostel Meeting - Oct 25th',
+                short_desc: 'All residents are required to attend a mandatory meeting regarding...',
+                full_desc: '<p>All residents are required to attend a mandatory meeting regarding new security protocols.</p><p><strong>Date:</strong> October 25th, 2025<br><strong>Time:</strong> 7:00 PM<br><strong>Location:</strong> Mess Hall</p><p>Attendance will be taken. Please be on time.</p>'
+            }
+        ];
+        
+        
+        async function loadStudentData() {
+            const studentId = localStorage.getItem('currentStudentId');
+            
+            if (!studentId) {
+                alert('No student ID found. Please log in.');
+                logout(); 
+                return false; 
+            }
+
+            try {
+                // --- 1. Get main student profile data ---
+                const response = await fetch(`http://localhost:5000/api/student/${studentId}`);
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.message || `Error: ${response.status}`);
+                }
+                const data = await response.json();
+                if (!data.success) {
+                    throw new Error(data.message);
+                }
+
+                // --- 2. 🚀 NEW: Get current attendance status ---
+                const statusResponse = await fetch(`http://localhost:5000/api/attendance/status/${studentId}`);
+                if (!statusResponse.ok) {
+                    throw new Error('Could not fetch attendance status.');
+                }
+                const statusData = await statusResponse.json();
+                if (statusData.success) {
+                    g_attendanceStatus.status = statusData.status;
+                    g_attendanceStatus.lastActionTime = statusData.lastActionTime;
+                }
+
+                // --- 3. Store all data in globals ---
+                g_student = data.student;
+                g_room = data.room;
+                g_block = data.block;
+                g_roommates = data.roommates;
+                g_attendance = data.attendance; // 🚀 This is now REAL data
+                g_complaints = data.complaints; 
+
+                console.log('✅ Student data loaded:', data);
+                console.log('✅ Attendance status loaded:', g_attendanceStatus);
+                
+                // === DELETED THEME-SWITCHING LOGIC ===
+                // The theme is now consistently blue.
+
+                return true; 
+            } catch (error) {
+                console.error('❌ Failed to load student data:', error);
+                alert(`Error loading your data: ${error.message}. Logging out.`);
+                logout();
+                return false; 
+            }
+        }
+        
+        // =========================================================================
+        // UTILITIES & NAVIGATION
+        // =========================================================================
+        function formatCurrency(amount) {
+            return `₹${amount.toLocaleString('en-IN')}`;
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            return new Date(dateString).toLocaleDateString('en-GB', {
+                day: '2-digit', month: 'short', year: 'numeric'
+            }); 
+        }
+
+        function formatTime(isoString) {
+            if (!isoString) return '...';
+            return new Date(isoString).toLocaleTimeString('en-US', { 
+                day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true 
+            });
+        }
+
+        function updateActiveMenuItem(viewId) {
+            const allLinks = document.querySelectorAll('.nav-link');
+            // UPDATED: No more dynamic themeColor, hard-coded to primary-blue
+            
+            allLinks.forEach(link => {
+                link.classList.remove('active', 'text-primary-blue', 'font-semibold', 'border-primary-blue');
+                link.classList.add('text-secondary-gray', 'hover:text-primary-blue', 'border-transparent');
+            });
+
+            if (viewId === 'student-details-view') {
+                 viewId = 'student-profile-view';
+            }
+
+            const desktopLink = document.getElementById(`nav-${viewId}`);
+            if (desktopLink) {
+                desktopLink.classList.add('active', 'text-primary-blue', 'font-semibold');
+                desktopLink.classList.remove('text-secondary-gray');
+            }
+            const mobileLink = document.getElementById(`mobile-nav-${viewId}`);
+            if (mobileLink) {
+                mobileLink.classList.add('active', 'text-primary-blue', 'bg-light-bg', 'border-primary-blue');
+                mobileLink.classList.remove('text-gray-600', 'border-transparent');
+            }
+        }
+
+        function showView(viewId) {
+            const views = document.querySelectorAll('.view');
+            views.forEach(view => {
+                if (view.id === viewId) {
+                    view.classList.remove('hidden', 'opacity-0', 'translate-x-20');
+                    view.classList.add('opacity-100', 'translate-x-0');
+                } else {
+                    view.classList.add('hidden', 'opacity-0', 'translate-x-20');
+                    view.classList.remove('opacity-100', 'translate-x-0');
+                }
+            });
+            updateActiveMenuItem(viewId);
+            
+            if (viewId === 'student-details-view') {
+                populateStudentProfileView(); 
+            } else if (viewId === 'student-room-view') {
+                populateRoommatesList();
+            } else if (viewId === 'student-reports-view') {
+                showReportTab('complaints');
+                populateStudentComplaintHistory();
+                populateLostAndFound();
+            } else if (viewId === 'student-leave-view') {
+                populateStudentLeaveHistory();
+            } else if (viewId === 'student-attendance-view') {
+                updateAttendanceStatus(); 
+                populateAttendanceLog(); // 🚀 This will now show real data
+            } else if (viewId === 'student-visitor-view') {
+                populateVisitorHistory();
+            }
+        }
+        
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+        function hideMobileMenu() {
+            document.getElementById('mobile-menu').classList.add('hidden');
+        }
+
+        function showReportTab(tabName) {
+            // UPDATED: No more dynamic theme, hard-coded to primary-blue
+            
+            document.querySelectorAll('.report-tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.querySelectorAll('.report-tab').forEach(tab => {
+                tab.classList.remove('active', 'border-primary-blue', 'text-primary-blue');
+            });
+            
+            document.getElementById(`report-tab-content-${tabName}`).classList.remove('hidden');
+            const activeTab = document.getElementById(`tab-${tabName}`);
+            activeTab.classList.add('active', 'border-primary-blue', 'text-primary-blue');
+        }
+
+        function logout() {
+            localStorage.removeItem('currentStudentId'); 
+            window.location.href = "login.html"; 
+        }
+
+        // =========================================================================
+        // DATA POPULATION FUNCTIONS
+        // =========================================================================
+
+        function initializeDashboard() {
+            if (!g_student) { 
+                console.error("No student data loaded.");
+                logout(); 
+                return;
+            }
+            
+            // UPDATED: No more dynamic theme, hard-coded to primary-blue
+
+            // 1. Set Welcome Message
+            const firstName = g_student.name.split(' ')[0];
+            document.getElementById('welcome-heading').textContent = `Welcome, ${firstName} 👋`;
+
+            // 2. Set Initials
+            const initials = g_student.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+            document.getElementById('student-initial-box').textContent = initials;
+            
+            // 3. Room Card
+            const roomCard = document.querySelector('.card-classy-lift[onclick="showView(\'student-room-view\')"]');
+            if (g_room && g_block) {
+                roomCard.querySelector('.text-4xl').textContent = g_room.roomNumber; 
+                roomCard.querySelector('.text-sm').textContent = `${g_block.blockName} | ${g_room.floor}`;
+                roomCard.classList.add('border-primary-blue'); 
+                roomCard.querySelector('.text-xs').classList.add('text-primary-blue'); 
+            }
+
+            // 4. Fee Card
+            const feeStatusElement = document.getElementById('dashboard-fee-status');
+            const feeCard = feeStatusElement.closest('.card-classy-lift');
+            const feeStatusText = feeCard.querySelector('.text-sm');
+            const feeStatusIcon = feeCard.querySelector('.mt-4');
+
+            if (g_student.feeStatus === 'Pending') {
+                feeStatusElement.textContent = 'Fee Due'; 
+                feeStatusElement.classList.add('text-accent-red');
+                feeStatusElement.classList.remove('text-accent-green');
+                feeCard.classList.replace('border-accent-green', 'border-accent-red');
+                feeCard.querySelector('.text-xs').classList.replace('text-accent-green', 'text-accent-red');
+                feeStatusText.textContent = `Status: ${g_student.feeStatus}`;
+                feeStatusIcon.classList.replace('text-accent-green', 'text-accent-red');
+                feeStatusIcon.querySelector('span').textContent = 'Please pay at the admin office.';
+            } else {
+                feeStatusElement.textContent = 'Paid'; 
+                feeStatusElement.classList.add('text-accent-green');
+                feeStatusElement.classList.remove('text-accent-red');
+                feeCard.classList.replace('border-accent-red', 'border-accent-green');
+                feeCard.querySelector('.text-xs').classList.replace('text-accent-red', 'text-accent-green');
+                feeStatusText.textContent = `Status: ${g_student.feeStatus}`;
+                feeStatusIcon.classList.replace('text-accent-red', 'text-accent-green');
+                feeStatusIcon.innerHTML = '<span>●</span> <span class="ml-1">No outstanding balance.</span>';
+            }
+
+            // 5. Open Requests Card
+            const openRequestsEl = document.getElementById('dashboard-open-requests');
+            const openRequestsText = openRequestsEl.nextElementSibling;
+            
+            const pendingComplaints = g_complaints.filter(c => c.status === 'Pending' || c.status === 'Critical'); 
+            openRequestsEl.textContent = String(pendingComplaints.length).padStart(2, '0');
+            
+            if (pendingComplaints.length > 0) {
+                openRequestsText.textContent = `Complaint Pending (${pendingComplaints[0].title})`;
+            } else {
+                openRequestsText.textContent = 'No open complaints.';
+            }
+        }
+
+        function populateRoommatesList() {
+            if (!g_room || !g_block) return; 
+            // UPDATED: No more dynamic theme, hard-coded to primary-blue
+
+            const summaryCard = document.querySelector('#student-room-view .lg\\:col-span-1');
+            summaryCard.classList.add('border-primary-blue'); 
+            
+            summaryCard.querySelector('h3').textContent = `Room ${g_room.roomNumber} Summary`;
+            summaryCard.querySelector('p.flex:nth-child(1) span').textContent = g_block.blockName;
+            summaryCard.querySelector('p.flex:nth-child(2) span').textContent = g_room.floor;
+            summaryCard.querySelector('p.flex:nth-child(3) span').textContent = `${g_room.capacity} Beds`;
+            
+            const occupancy = g_roommates.length + 1; 
+            const occupancyText = `${occupancy}/${g_room.capacity}`;
+            const occupancyEl = summaryCard.querySelector('p.flex:nth-child(4) span');
+            occupancyEl.textContent = occupancyText;
+            
+            if (occupancy >= g_room.capacity) {
+                occupancyEl.textContent = `Full (${occupancyText})`;
+                occupancyEl.classList.add('text-accent-red');
+                occupancyEl.classList.remove('text-accent-green');
+            } else {
+                occupancyEl.textContent = `Available (${occupancyText})`;
+                occupancyEl.classList.add('text-accent-green');
+                occupancyEl.classList.remove('text-accent-red');
+            }
+
+            const roommatesList = document.getElementById('roommates-list');
+            roommatesList.innerHTML = '';
+            roommatesList.previousElementSibling.textContent = `Current Roommates (${g_roommates.length})`;
+
+            g_roommates.forEach(mate => { 
+                if (!mate) return;
+                const mateInitials = mate.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+
+                const mateCard = document.createElement('div');
+                mateCard.className = `bg-light-bg p-4 rounded-lg shadow-soft flex items-center space-x-4 border-l-4 border-primary-blue`;
+                mateCard.innerHTML = `
+                    <div class="h-10 w-10 bg-primary-blue/20 rounded-full flex items-center justify-center text-accent-dark font-bold text-lg">${mateInitials}</div>
+                    <div>
+                        <p class="font-bold text-accent-dark">${mate.name}</p>
+                        <p class="text-sm text-secondary-gray">${mate.course || 'N/A'} - ${mate.year || 'N/A'}</p>
+                    </div>
+                `;
+                roommatesList.appendChild(mateCard);
+            });
+
+            if (roommatesList.children.length === 0) {
+                roommatesList.innerHTML = `<p class="text-secondary-gray col-span-2">You are currently the sole occupant of Room ${g_room.roomNumber}.</p>`;
+            }
+        }
+        
+        function populateStudentComplaintHistory() {
+            const tableBody = document.getElementById('student-complaint-history');
+            tableBody.innerHTML = '';
+            
+            const myComplaints = g_complaints.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (myComplaints.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="py-4 px-6 text-center text-secondary-gray">You have not filed any complaints.</td></tr>`;
+                return;
+            }
+
+            myComplaints.forEach(c => {
+                let priority = c.status === 'Critical' ? 'Critical' : (c.status === 'Pending' ? 'Medium' : 'Low');
+                let priorityColorClass = priority === 'Critical' ? 'text-accent-red' : (priority === 'Medium' ? 'text-info-yellow' : 'text-accent-green');
+                let statusColorClass = c.status === 'Resolved' ? 'text-accent-green' : (c.status === 'Pending' || c.status === 'Critical' ? 'text-info-yellow' : 'text-secondary-gray');
+                let formattedDate = c.date ? new Date(c.date).toLocaleDateString() : 'N/A';
+
+                tableBody.innerHTML += `
+                    <tr class="hover:bg-light-bg transition duration-150">
+                        <td class="py-3 px-6 whitespace-nowrap text-sm text-accent-dark">#C00${c._id ? c._id.substring(c._id.length - 4) : 'N/A'}</td>
+                        <td class="py-3 px-6 whitespace-nowrap text-sm text-secondary-gray">${formattedDate}</td>
+                        <td class="py-3 px-6 text-sm text-accent-dark">${c.title}</td> 
+                        <td class="py-3 px-6 whitespace-nowrap text-sm font-medium ${statusColorClass}">${c.status}</td>
+                        <td class="py-3 px-6 whitespace-nowrap text-sm font-medium ${priorityColorClass}">${priority}</td>
+                    </tr>
+                `;
+            });
+        }
+        
+        function populateStudentLeaveHistory() {
+            const tableBody = document.getElementById('student-leave-history');
+            tableBody.innerHTML = '';
+            const sortedLeaves = mockLeaveHistory
+                .filter(l => l.studentId === g_student._id || l.studentId === 1) 
+                .sort((a, b) => new Date(b.start) - new Date(a.start));
+
+            if (sortedLeaves.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="py-4 px-6 text-center text-secondary-gray">No leave history found.</td></tr>`;
+                return;
+            }
+
+            sortedLeaves.forEach(l => {
+                let statusColorClass = l.status === 'Approved' ? 'text-accent-green' : (l.status === 'Pending' ? 'text-info-yellow' : 'text-accent-red');
+
+                tableBody.innerHTML += `
+                    <tr class="hover:bg-light-bg transition duration-150">
+                        <td class="py-3 px-6 whitespace-nowrap text-sm text-accent-dark">${l.start}</td>
+                        <td class="py-3 px-6 whitespace-nowrap text-sm text-accent-dark">${l.end}</td>
+                        <td class="py-3 px-6 text-sm text-secondary-gray">${l.reason}</td>
+                        <td class="py-3 px-6 whitespace-nowrap text-sm font-medium ${statusColorClass}">${l.status}</td>
+                    </tr>
+                `;
+            });
+        }
+        
+        function submitComplaint() {
+            const issue = document.getElementById('complaint-type').value;
+            alert(`Complaint submitted successfully: "${issue}" in Room ${g_room.roomNumber}. Await admin resolution.`);
+            // TODO: In Task 2, we will send this to the server.
+        }
+
+        function submitLeave() {
+            const start = document.getElementById('leave-start').value;
+            const end = document.getElementById('leave-end').value;
+            if (!start || !end) {
+                alert('Please select both start and end dates.');
+                return;
+            }
+            if (new Date(end) < new Date(start)) {
+                alert('Return date must be after the departure date.');
+                return;
+            }
+            alert(`Leave request submitted for ${start} to ${end}. Status is Pending Review.`);
+            // TODO: We will send this to the server later.
+        }
+
+        function showStudentDetails() {
+            showView('student-details-view');
+            populateStudentProfileView();
+        }
+
+        function populateStudentProfileView() {
+            if (!g_student) {
+                console.error("No student data available for profile view.");
+                return;
+            }
+            
+            const student = g_student;
+            const roomNumber = g_room.roomNumber;
+            const blockName = g_block.blockName;
+            const attendance = g_attendance;
+            const complaints = g_complaints;
+            // UPDATED: No more dynamic theme, hard-coded to primary-blue
+
+            // --- 1. Populate Profile Header ---
+            document.getElementById('profile-name').textContent = student.name;
+            const nameParts = student.name.split(' ');
+            const initials = (nameParts[0] ? nameParts[0][0] : '') + (nameParts[1] ? nameParts[1][0] : '');
+            const initialsEl = document.getElementById('profile-initials');
+            initialsEl.textContent = initials;
+            initialsEl.classList.remove('bg-pink-500', 'bg-blue-500'); 
+            initialsEl.classList.add('bg-primary-blue'); // Always blue
+            
+            document.getElementById('profile-year').textContent = student.year || 'N/A';
+            // UPDATED: Profile year badge to be blue
+            document.getElementById('profile-year').classList.remove('bg-pink-100', 'text-pink-700');
+            document.getElementById('profile-year').classList.add('bg-primary-blue/10', 'text-primary-blue');
+            
+            document.getElementById('profile-course').textContent = `${student.course || ''} ${student.department || ''}`;
+            document.getElementById('profile-location').textContent = `${blockName} - Room ${roomNumber}`;
+
+            // --- 2. Populate Contact Info ---
+            document.getElementById('profile-email').textContent = student.email || 'N/A';
+            document.getElementById('profile-phone').textContent = student.phone || 'N/A';
+            document.getElementById('profile-join-date').textContent = formatDate(student.joiningDate);
+
+            // --- 3. Populate Fee Details ---
+            const feeStatusEl = document.getElementById('profile-fee-status');
+            const paymentMethodEl = document.getElementById('profile-payment-method');
+            
+            feeStatusEl.textContent = student.feeStatus || 'Pending';
+            paymentMethodEl.textContent = student.paymentMethod || 'Not Paid';
+            
+            feeStatusEl.classList.remove('bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700'); 
+            if (student.feeStatus === 'Paid') {
+                feeStatusEl.classList.add('bg-green-100', 'text-green-700');
+            } else {
+                feeStatusEl.textContent = 'Due'; 
+                feeStatusEl.classList.add('bg-red-100', 'text-red-700');
+            }
+
+            // --- 4. Populate Attendance Log ---
+            const attendanceTable = document.getElementById('profile-attendance-log-table');
+            if (!attendance || attendance.length === 0) {
+                attendanceTable.innerHTML = '<tr><td colspan="4" class="p-4 text-center text-gray-500">No attendance data found.</td></tr>';
+            } else {
+                attendanceTable.innerHTML = ''; 
+                attendance.forEach(log => {
+                    const statusColor = log.status === 'Present' ? 'text-green-600' : 'text-red-600';
+                    const row = `
+                        <tr>
+                            <td class="p-4 text-gray-800 font-medium">${formatDate(log.date)}</td>
+                            <td class="p-4 text-gray-700">${log.checkInTime ? new Date(log.checkInTime).toLocaleTimeString() : '--'}</td>
+                            <td class="p-4 text-gray-700">${log.checkOutTime ? new Date(log.checkOutTime).toLocaleTimeString() : '--'}</td>
+                            <td class="p-4 font-medium ${statusColor}">${log.status}</td>
+                        </tr>
+                    `;
+                    attendanceTable.innerHTML += row;
+                });
+            }
+
+            // --- 5. Populate Complaints List ---
+            const complaintsList = document.getElementById('profile-complaints-list');
+            if (!complaints || complaints.length === 0) {
+                complaintsList.innerHTML = '<p class="text-gray-500">No complaints filed by this student.</p>';
+            } else {
+                complaintsList.innerHTML = ''; 
+                complaints.forEach(complaint => {
+                    const statusColor = complaint.status === 'Resolved' 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-yellow-100 text-yellow-700';
+                    
+                    const item = `
+                        <div class="flex justify-between items-center bg-gray-50 p-4 rounded-lg border">
+                            <div>
+                                <p classs="font-medium text-gray-800">${complaint.title}</p>
+                                <p class="text-sm text-gray-500">Filed on: ${formatDate(complaint.date)}</p>
+                            </div>
+                            <span class="text-xs font-bold px-3 py-1 rounded-full ${statusColor}">${complaint.status}</span>
+                        </div>
+                    `;
+                    complaintsList.innerHTML += item;
+                });
+            }
+        }
+
+
+        // =========================================================================
+        // --- ATTENDANCE & OTHER FUNCTIONS ---
+        // =========================================================================
+
+        function updateAttendanceStatus() {
+            const card = document.getElementById('attendance-status-card');
+            const statusText = document.getElementById('attendance-status-text');
+            const timeText = document.getElementById('attendance-status-time');
+            const button = document.getElementById('attendance-toggle-btn');
+
+            card.classList.remove('border-accent-green', 'border-accent-red');
+            statusText.classList.remove('text-accent-green', 'text-accent-red');
+            button.classList.remove('bg-accent-green', 'bg-accent-red', 'hover:bg-green-700', 'hover:bg-red-700');
+
+            if (g_attendanceStatus.status === 'Checked In') {
+                card.classList.add('border-accent-green');
+                statusText.classList.add('text-accent-green');
+                statusText.textContent = 'Checked In';
+                timeText.textContent = `Since: ${formatTime(g_attendanceStatus.lastActionTime)}`;
+                button.classList.add('bg-accent-red', 'hover:bg-red-700');
+                button.textContent = 'Check Out';
+            } else {
+                card.classList.add('border-accent-red');
+                statusText.classList.add('text-accent-red');
+                statusText.textContent = 'Checked Out';
+                timeText.textContent = g_attendanceStatus.lastActionTime ? `Since: ${formatTime(g_attendanceStatus.lastActionTime)}` : 'Not yet checked in today';
+                button.classList.add('bg-accent-green', 'hover:bg-green-700');
+                button.textContent = 'Check In';
+            }
+        }
+
+        async function toggleAttendance() {
+            const button = document.getElementById('attendance-toggle-btn');
+            button.disabled = true;
+            button.textContent = 'Updating...';
+
+            try {
+                const response = await fetch('http://localhost:5000/api/attendance/toggle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ studentId: g_student._id })
+                });
+
+                const data = await response.json();
+                if (!data.success) {
+                    throw new Error(data.message);
+                }
+
+                g_attendanceStatus.status = data.newStatus;
+                g_attendanceStatus.lastActionTime = data.lastActionTime;
+
+                updateAttendanceStatus();
+                
+                // 🚀 NEW: After toggling, we must reload the attendance data
+                // This is a "soft reload" of just the attendance part
+                const attResponse = await fetch(`http://localhost:5000/api/student/${g_student._id}`);
+                const attData = await attResponse.json();
+                if (attData.success) {
+                    g_attendance = attData.attendance; // Update global attendance
+                    populateAttendanceLog(); // Repopulate the table
+                }
+                
+            } catch (error) {
+                console.error('Error toggling attendance:', error);
+                alert(`Error: ${error.message}`);
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        // 🚀 CHANGED: This function now populates the table with REAL data
+        function populateAttendanceLog() {
+            const tableBody = document.getElementById('attendance-log-body');
+            tableBody.innerHTML = '';
+            
+            // It now uses the REAL g_attendance data
+            if (g_attendance.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="py-4 px-6 text-center text-secondary-gray">No attendance log found.</td></tr>`;
+                return;
+            }
+            
+            g_attendance.forEach(log => {
+                const statusClass = log.status === 'Present' ? 'text-accent-green' : 'text-accent-red';
+                let formattedDate = log.date ? formatDate(log.date) : 'N/A';
+                
+                // Use toLocaleTimeString() to get just the time
+                let checkIn = log.checkInTime ? new Date(log.checkInTime).toLocaleTimeString() : '--';
+                let checkOut = log.checkOutTime ? new Date(log.checkOutTime).toLocaleTimeString() : '--';
+
+                tableBody.innerHTML += `
+                    <tr class="hover:bg-light-bg transition duration-150">
+                        <td class="py-3 px-6 whitespace-nowrap text-sm text-accent-dark">${formattedDate}</td>
+                        <td class="py-3 px-6 whitespace-nowrap text-sm text-secondary-gray">${checkIn}</td>
+                        <td class="py-3 px-6 whitespace-nowrap text-sm text-secondary-gray">${checkOut}</td>
+                        <td class="py-3 px-6 whitespace-nowrap text-sm font-medium ${statusClass}">${log.status}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function handleVisitorFormSubmit() {
+            const startDate = new Date(document.getElementById('visitor-start-date').value);
+            const endDate = new Date(document.getElementById('visitor-end-date').value);
+
+            if (!startDate.getTime() || !endDate.getTime() || endDate <= startDate) {
+                alert('Check-out date must be after the check-in date.');
+                return;
+            }
+
+            const diffTime = Math.abs(endDate - startDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const guestFee = 100;
+            const totalFee = diffDays * guestFee;
+
+            document.getElementById('visitor-stay-duration').textContent = `${diffDays} Nights`;
+            document.getElementById('visitor-total-fee').textContent = formatCurrency(totalFee);
+            document.getElementById('visitor-summary-box').classList.remove('hidden');
+        }
+
+        function populateVisitorHistory() {
+            const tableBody = document.getElementById('visitor-history-body');
+            tableBody.innerHTML = '';
+            const myVisitorHistory = mockVisitorHistory.filter(v => v.studentId === g_student._id || v.studentId === 1);
+
+            if (myVisitorHistory.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="py-4 px-6 text-center text-secondary-gray">No visitor history.</td></tr>`;
+                return;
+            }
+
+            myVisitorHistory.forEach(v => {
+                const statusClass = v.status === 'Paid' ? 'text-accent-green' : 'text-accent-red';
+                tableBody.innerHTML += `
+                    <tr class="hover:bg-light-bg transition duration-150">
+                        <td class="py-3 px-6 whitespace-nowrap text-sm text-accent-dark">${v.name}</td>
+                        <td class="py-3 px-6 whitespace-nowrap text-sm text-secondary-gray">${v.start} to ${v.end}</td>
+                        <td class="py-3 px-6 whitespace-nowrap text-sm text-accent-dark">${formatCurrency(v.fee)}</td>
+                        <td class="py-3 px-6 whitespace-nowrap text-sm font-medium ${statusClass}">${v.status}</td>
+                    </tr>
+                `;
+            });
+        }
+        
+        function populateLostAndFound() {
+            const tableBody = document.getElementById('lost-found-body');
+            tableBody.innerHTML = '';
+            if (mockLostFound.length === 0) {
+                 tableBody.innerHTML = `<tr><td colspan="4" class="py-4 px-6 text-center text-secondary-gray">No items reported found.</td></tr>`;
+                 return;
+            }
+            mockLostFound.forEach(item => {
+                const statusClass = item.status === 'Available' ? 'text-accent-green' : 'text-secondary-gray';
+                tableBody.innerHTML += `
+                    <tr class="hover:bg-light-bg transition duration-150">
+                        <td class="py-3 px-6 whitespace-nowrap text-sm text-accent-dark">${item.item}</td>
+                        <td class="py-3 px-6 whitespace-nowrap text-sm text-secondary-gray">${item.dateFound}</td>
+                        <td class="py-3 px-6 whitespace-nowrap text-sm text-secondary-gray">${item.location}</td>
+                        <td class="py-3 px-6 whitespace-nowrap text-sm font-medium ${statusClass}">${item.status}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- Announcement Modal Functions ---
+        function openAnnouncementsModal() {
+            document.getElementById('announcement-modal').classList.remove('hidden');
+            populateAnnouncementsList();
+        }
+        function closeAnnouncementsModal() {
+            document.getElementById('announcement-modal').classList.add('hidden');
+        }
+        function populateAnnouncementsList() {
+            document.getElementById('announcement-list-view').classList.remove('hidden');
+            document.getElementById('announcement-detail-view').classList.add('hidden');
+            const container = document.getElementById('announcement-list-container');
+            container.innerHTML = ''; 
+            mockAnnouncements.forEach(ann => {
+                container.innerHTML += `
+                    <a href="#" onclick="event.preventDefault(); showAnnouncementDetail(${ann.id})" class="block p-4 rounded-lg bg-light-bg hover:bg-gray-200 transition duration-200">
+                        <p class="text-xs text-secondary-gray">${ann.date}</p>
+                        <h4 class="font-bold text-accent-dark hover:text-primary-blue">${ann.title}</h4>
+                        <p class="text-sm text-secondary-gray">${ann.short_desc}</p>
+                    </a>
+                `;
+            });
+        }
+        function showAnnouncementDetail(id) {
+            const ann = mockAnnouncements.find(a => a.id === id);
+            if (!ann) return;
+            document.getElementById('announcement-list-view').classList.add('hidden');
+            document.getElementById('announcement-detail-view').classList.remove('hidden');
+            document.getElementById('announcement-detail-title').textContent = ann.title;
+            document.getElementById('announcement-detail-date').textContent = `Posted on: ${ann.date}`;
+            document.getElementById('announcement-detail-body').innerHTML = ann.full_desc;
+        }
+        function showAnnouncementsList() {
+            document.getElementById('announcement-detail-view').classList.add('hidden');
+            document.getElementById('announcement-list-view').classList.remove('hidden');
+        }
+
+
+        // =========================================================================
+        // INITIALIZATION
+        // =========================================================================
+        document.addEventListener('DOMContentLoaded', async () => {
+            
+            // REMOVED: Particle script initialization
+
+            // Original logic continues...
+            const success = await loadStudentData(); 
+            
+            if (success) {
+                initializeDashboard(); 
+                showView('student-dashboard-view');
+                
+                document.getElementById('mobile-menu-button').addEventListener('click', toggleMobileMenu);
+                
+                document.getElementById('attendance-toggle-btn').addEventListener('click', toggleAttendance);
+                
+                document.getElementById('visitor-form').addEventListener('submit', handleVisitorFormSubmit);
+                document.getElementById('raise-ticket-btn').addEventListener('click', () => {
+                    const visitorName = document.getElementById('visitor-name').value;
+                    const fee = document.getElementById('visitor-total-fee').textContent;
+                    alert(`Payment ticket for ${visitorName} (${fee}) has been raised!`);
+                    document.getElementById('visitor-summary-box').classList.add('hidden');
+                    document.getElementById('visitor-form').reset();
+                });
+            }
+        });
+    </script>
+</body>
+</html>
