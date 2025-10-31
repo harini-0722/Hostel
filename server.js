@@ -19,7 +19,7 @@ const PORT = 5000;
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, "public", "login.html")));
+app.use(express.static(path.join(__dirname, "public")));
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
  // Serve your login.html etc.
 
@@ -631,6 +631,12 @@ app.post('/api/attendance/toggle', async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
+
+// Default route for Render (root URL)
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
 
 // 🚀 --- END OF ATTENDANCE API ROUTES ---
 // ✅ Start the server
